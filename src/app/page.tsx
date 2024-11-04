@@ -4,7 +4,6 @@ import Vision from '@/components/vision'
 import Features from '@/components/features'
 import Feedback from '@/components/feedback'
 import CTA from '@/components/cta'
-import Footer from '@/components/footer'
 import '@/styles/globals.css'
 
 export default function Home() {

@@ -24,7 +24,7 @@ export default function Mission() {
     <section id="mission" className="w-full py-12 md:py-24 lg:py-32">
       <div className="container mx-auto px-4 md:px-6">
         <h2 className="text-5xl font-bold text-center text-violet-400 mb-6">Expanding <span className="italic text-violet-600">Universe</span></h2>
-        <p className="mx-auto max-w-[700px] text-center text-2xl italic mb-6">Informed by our experience building the world's largest decentralized solutions protocol.</p>
+        <p className="mx-auto max-w-[700px] text-center text-2xl italic mb-6">Informed by our experience building the worlds largest decentralized solutions protocol.</p>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {missions.map((mission, index) => (
             <Card key={index}>
