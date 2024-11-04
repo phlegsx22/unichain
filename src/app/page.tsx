@@ -14,6 +14,8 @@ export default function Home() {
       <Mission />
       <Vision />
       <Features />
+      <Feedback />
+      <CTA  />
     </main>
   )
 }
