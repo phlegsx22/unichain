@@ -23,7 +23,7 @@ export async function POST(request: Request) {
 
     await newUser.save()
 
-    return NextResponse.json({ message: 'User created. Please check your email for verification.' }, { status: 201 })
+    return NextResponse.json({ message: 'User created. Please check your email for verification.YES!!' }, { status: 201 })
   } catch (error) {
     console.error('Signup error:', error)
     return NextResponse.json({ message: 'Error creating user' }, { status: 500 })
