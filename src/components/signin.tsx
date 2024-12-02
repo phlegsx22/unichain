@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -10,11 +11,36 @@ import Link from 'next/link'
 export default function LoginForm() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
+  const router = useRouter()
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // Here you would typically handle form submission, e.g., sending data to an API
-    console.log('Login form submitted', { email, password })
+    setError('')
+    setIsLoading(true)
+
+    try {
+      const res = await fetch('/api/auth/signin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      })
+
+      if (res.ok) {
+        const data = await res.json()
+        console.log('Sign in successful:', data.user)
+        router.push('/profile') // Redirect to profile page after successful login
+      } else {
+        const data = await res.json()
+        setError(data.message || 'An error occurred during sign in')
+      }
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (error) {
+      setError('An error occurred during sign in')
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -24,6 +50,7 @@ export default function LoginForm() {
         <CardDescription className="text-purple-100">Log in to your account</CardDescription>
       </CardHeader>
       <CardContent className="pt-6">
+        {error && <p className="text-red-500 mb-4">{error}</p>}
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="email" className="text-purple-700">Email</Label>
@@ -48,11 +75,17 @@ export default function LoginForm() {
               className="border-purple-200 focus:border-purple-500 focus:ring-purple-500"
             />
           </div>
-          <Button type="submit" className="w-full bg-purple-600 hover:bg-purple-700 text-white">Log In</Button>
+          <Button 
+            type="submit" 
+            className="w-full bg-purple-600 hover:bg-purple-700 text-white"
+            disabled={isLoading}
+          >
+            {isLoading ? 'Signing In...' : 'Log In'}
+          </Button>
         </form>
       </CardContent>
       <CardFooter className="flex justify-between bg-purple-50">
-        <Link href="/forgot-password" className="text-sm text-indigo-600 hover:underline">
+        <Link href="/forgotpassword" className="text-sm text-indigo-600 hover:underline">
           Forgot password?
         </Link>
         <p className="text-sm text-purple-700">
