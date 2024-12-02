@@ -1,11 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import ProfileContent from './profileContent'
 import IssuesContent from './issueContent'
 import SupportContent from './supportContent'
-import { LogOut, User, AlertCircle, HeadphonesIcon } from 'lucide-react'
+import { LogOut, User, AlertCircle, HeadphonesIcon, Menu, X } from 'lucide-react'
 import Link from 'next/link'
 
 const tabs = [
@@ -16,19 +16,61 @@ const tabs = [
 
 export default function ProfileLayout() {
   const [activeTab, setActiveTab] = useState('profile')
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    const checkIsMobile = () => {
+      setIsMobile(window.innerWidth < 768)
+    }
+
+    checkIsMobile()
+    window.addEventListener('resize', checkIsMobile)
+
+    return () => {
+      window.removeEventListener('resize', checkIsMobile)
+    }
+  }, [])
 
   const handleLogout = () => {
     // Implement logout functionality here
     console.log('Logging out...')
   }
 
+  const toggleMobileMenu = () => {
+    setIsMobileMenuOpen(!isMobileMenuOpen)
+  }
+
+  const handleTabChange = (tabId: string) => {
+    setActiveTab(tabId)
+    if (isMobile) {
+      setIsMobileMenuOpen(false)
+    }
+  }
+
   return (
     <div className="flex min-h-screen bg-gray-100">
-      <aside className="w-64 bg-gradient-to-b from-purple-600 to-indigo-600 text-white p-6 flex flex-col">
+      {isMobile && (
+        <button
+          onClick={toggleMobileMenu}
+          className="fixed top-4 left-4 z-50 p-2 bg-purple-600 text-white rounded-md"
+        >
+          {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+        </button>
+      )}
+      <aside
+        className={`${
+          isMobile
+            ? `fixed inset-y-0 left-0 z-40 w-64 transform ${
+                isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
+              } transition-transform duration-300 ease-in-out`
+            : 'w-64'
+        } bg-gradient-to-b from-purple-600 to-indigo-600 text-white p-6 flex flex-col`}
+      >
         <Link href="/" className="mb-10">
           <h1 className="text-2xl font-bold">Unichain</h1>
         </Link>
-        <Tabs orientation="vertical" value={activeTab} onValueChange={setActiveTab} className="space-y-2 flex-grow mt-24">
+        <Tabs orientation="vertical" value={activeTab} onValueChange={handleTabChange} className="space-y-2 flex-grow mt-24">
           <TabsList className="flex flex-col items-stretch space-y-2 bg-transparent flex-grow">
             {tabs.map((tab) => (
               <TabsTrigger
@@ -50,7 +92,7 @@ export default function ProfileLayout() {
           </TabsList>
         </Tabs>
       </aside>
-      <main className="flex-1 p-8">
+      <main className="flex-1 p-4 md:p-8">
         <div className="max-w-4xl mx-auto">
           {activeTab === 'profile' && <ProfileContent />}
           {activeTab === 'issues' && <IssuesContent />}
