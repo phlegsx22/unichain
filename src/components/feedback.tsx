@@ -3,9 +3,24 @@ import Image from 'next/image'
 
 export default function Feedback() {
   const testimonials = [
-    { name: "Alice Johnson", role: "Crypto Investor", content: "Unichain has revolutionized the way I manage my digital assets. Their security features are unparalleled.", avatar: "/placeholder.svg?height=100&width=100" },
-    { name: "Bob Smith", role: "Blockchain Developer", content: "As a developer, I appreciate the robust API and developer tools provided by CryptoSolutions. It's a game-changer.", avatar: "/placeholder.svg?height=100&width=100" },
-    { name: "Carol Williams", role: "Financial Advisor", content: "I recommend CryptoSolutions to all my clients. It's user-friendly and offers comprehensive market insights.", avatar:  "/placeholder.svg?height=100&width=100" },
+    { 
+      name: "Alice Johnson", 
+      role: "Crypto Investor", 
+      content: "Unichain has revolutionized the way I manage my digital assets. Their security features are unparalleled.", 
+      avatar: "https://masterpiecer-images.s3.yandex.net/004894523f2111ee8a764659bdca6a39:upscaled" 
+    },
+    { 
+      name: "Bob Smith", 
+      role: "Blockchain Developer", 
+      content: "As a developer, I appreciate the robust API and developer tools provided by CryptoSolutions. It's a game-changer.", 
+      avatar: "https://pics.craiyon.com/2023-08-02/04c617f98f064ab6820edd70bb5819b8.webp" 
+    },
+    { 
+      name: "Carol Williams", 
+      role: "Financial Advisor", 
+      content: "I recommend CryptoSolutions to all my clients. It's user-friendly and offers comprehensive market insights.", 
+      avatar: "https://preview.redd.it/youtube-avatar-advice-v0-nzyfuumjlkjb1.png?width=640&crop=smart&auto=webp&s=58f4301e4bb70d8037467bad72a80c88d5565563" 
+    },
   ]
 
   return (
