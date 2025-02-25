@@ -9,8 +9,7 @@ const nextConfig: NextConfig = {
         hostname: "**"
       }
     ]
-  },
-  transpilePackages: ["@uniswap/permit2-sdk"]
+  }
 };
 
 export default nextConfig;

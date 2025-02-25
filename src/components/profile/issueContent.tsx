@@ -24,7 +24,7 @@ import {
   MaxAllowanceTransferAmount,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   AllowanceTransfer,
-} from '@uniswap/Permit2-sdk'
+} from '@uniswap/permit2-sdk'
 
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
