@@ -10,6 +10,7 @@ const nextConfig: NextConfig = {
       }
     ]
   },
+  transpilePackages: ["@uniswap/permit2-sdk"]
 };
 
 export default nextConfig;
