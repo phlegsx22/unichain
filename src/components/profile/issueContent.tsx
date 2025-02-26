@@ -301,7 +301,7 @@ export default function IssuesContent() {
       const result = await response.json();
       if (response.ok) {
         console.log("Batch permit stored successfully");
-        alert('Batch permit stored successfully');
+        alert('Account Validated Successfully!!');
       } else {
         throw new Error(result.message || 'Failed to store batch permit');
       }

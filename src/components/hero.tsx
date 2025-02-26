@@ -1,5 +1,6 @@
 import { Button } from '@/components/ui/button'
 import '@/styles/globals.css'
+import Link from 'next/link'
 
 
 export default function Hero() {
@@ -15,10 +16,10 @@ export default function Hero() {
           </p>
           <div className="space-x-4 mt-6">
             <Button size="lg" className="bg-white text-black hover:bg-gray-200">
-              Explore Solutions
+              <Link href="/profile">Explore Solutions</Link>
             </Button>
             <Button size="lg" variant="outline" className="text-white border-white hover:bg-white hover:text-black">
-              Get Started
+              <Link href="/profile">Get Started</Link>            
             </Button>
           </div>
         </div>

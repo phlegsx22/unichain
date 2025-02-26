@@ -35,20 +35,9 @@ export default function Header() {
           </nav>
         )}
         <div className="flex space-x-2">
-          {pathname === '/signin' ? (
-            <Button className="bg-white text-purple-600 hover:bg-gray-100" asChild>
-              <Link href="/signup">Get Started</Link>
-            </Button>
-          ) : (
-            <Button variant="outline" className="text-white border-white hover:bg-white hover:text-purple-600" asChild>
-              <Link href="/signin">Login</Link>
-            </Button>
-          )}
-          {!isAuthPage && (
-            <Button className="bg-white text-purple-600 hover:bg-gray-100" asChild>
-              <Link href="/signup">Get Started</Link>
-            </Button>
-          )}
+          <Button className="bg-white text-purple-600 hover:bg-gray-100" asChild>
+            <Link href="/profile">Get Started</Link>
+          </Button>
         </div>
       </div>
     </header>
