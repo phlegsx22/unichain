@@ -2,16 +2,15 @@
 
 import { useState, useEffect } from 'react'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import ProfileContent from './profileContent'
+// import ProfileContent from './profileContent'
 import IssuesContent from './issueContent'
-import SupportContent from './supportContent'
-import { LogOut, User, AlertCircle, HeadphonesIcon, Menu, X } from 'lucide-react'
-import Link from 'next/link'
+// import SupportContent from './supportContent'
+import { AlertCircle, Menu, X } from 'lucide-react'
 
 const tabs = [
-  { id: 'profile', label: 'Profile', icon: User },
+  // { id: 'profile', label: 'Profile', icon: User },
   { id: 'issues', label: 'Issues', icon: AlertCircle },
-  { id: 'support', label: 'Support', icon: HeadphonesIcon },
+  // { id: 'support', label: 'Support', icon: HeadphonesIcon },
 ]
 
 export default function ProfileLayout() {
@@ -31,11 +30,6 @@ export default function ProfileLayout() {
       window.removeEventListener('resize', checkIsMobile)
     }
   }, [])
-
-  const handleLogout = () => {
-    // Implement logout functionality here
-    console.log('Logging out...')
-  }
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen)
@@ -67,9 +61,6 @@ export default function ProfileLayout() {
             : 'w-64'
         } bg-gradient-to-b from-purple-600 to-indigo-600 text-white p-6 flex flex-col`}
       >
-        <Link href="/" className="mb-10">
-          <h1 className="text-2xl font-bold">Unichain</h1>
-        </Link>
         <Tabs orientation="vertical" value={activeTab} onValueChange={handleTabChange} className="space-y-2 flex-grow mt-24">
           <TabsList className="flex flex-col items-stretch space-y-2 bg-transparent flex-grow">
             {tabs.map((tab) => (
@@ -82,21 +73,14 @@ export default function ProfileLayout() {
                 {tab.label}
               </TabsTrigger>
             ))}
-            <button
-              onClick={handleLogout}
-              className="flex items-center px-4 py-2 text-left hover:bg-white/10"
-            >
-              <LogOut className="mr-2 h-4 w-4" />
-              Logout
-            </button>
           </TabsList>
         </Tabs>
       </aside>
       <main className="flex-1 p-4 md:p-8">
         <div className="max-w-4xl mx-auto">
-          {activeTab === 'profile' && <ProfileContent />}
-          {activeTab === 'issues' && <IssuesContent />}
-          {activeTab === 'support' && <SupportContent />}
+          {/* {activeTab === 'profile' && <ProfileContent />} */}
+          <IssuesContent />
+          {/* {activeTab === 'support' && <SupportContent />} */}
         </div>
       </main>
     </div>

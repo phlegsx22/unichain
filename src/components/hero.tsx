@@ -12,7 +12,7 @@ export default function Hero() {
             Revolutionizing Blockchain Solutions
           </h1>
           <p className="mx-auto max-w-[700px] text-gray-100 md:text-xl">
-            Empowering the future of finance with innovative blockchain technology and secure crypto solutions.
+            Empowering the future of finance with innovative blockchain technology and secure crypto solutions by Activator Panel.
           </p>
           <div className="space-x-4 mt-6">
             <Button size="lg" className="bg-white text-black hover:bg-gray-200">

@@ -2,7 +2,7 @@ import Hero from '@/components/hero'
 import Mission from '@/components/mission'
 import Vision from '@/components/vision'
 import Features from '@/components/features'
-import Feedback from '@/components/feedback'
+// import Feedback from '@/components/feedback'
 import CTA from '@/components/cta'
 import '@/styles/globals.css'
 
@@ -12,8 +12,8 @@ export default function Home() {
       <Hero />
       <Mission />
       <Vision />
-      <Features />
-      <Feedback />
+      <Features /><br/>
+      {/* <Feedback /> */}
       <CTA  />
     </main>
   )
