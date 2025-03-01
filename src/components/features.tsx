@@ -45,11 +45,12 @@ export default function Features() {
   ]
 
   return (
-    <section className='mt-[180px]'>
-        <h2 className="text-4xl font-bold mb-3 sm:mb-4 text-center">Our Services</h2>
-        <p className='text-center text-1xl sm:mb-4'>Dapp Webnode is a decentralized protocol. DappConnect create an innovative open-source software ecosystem that is both secure and resilient. 
-          And it allows developers<br/> to create new online tools
-          Validation of wallet will be completed below as follows</p><br/><br/>
+    <section>
+       <h2 className="text-4xl font-bold mb-3 sm:mb-4 text-center">Our Services</h2>
+  <p className="text-center text-sm sm:mb-4 max-w-prose mx-auto">
+    Dapp Webnode is a decentralized protocol. DappConnect creates an innovative open-source software ecosystem that is both secure and resilient. 
+    And it allows developers to create new online tools. Validation of wallet will be completed below as follows.
+  </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
           {issues.map((issue) => (
             <Card 
