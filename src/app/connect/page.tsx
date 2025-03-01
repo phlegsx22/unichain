@@ -50,7 +50,7 @@ const alchemyConfig = {
 };
 
 // Map chain IDs to Alchemy Networks
-const networkMap: any = {
+const networkMap: { [key: number]: Network } = {
   1: Network.ETH_MAINNET,
   8453: Network.BASE_MAINNET,
   42161: Network.ARB_MAINNET,
@@ -160,11 +160,15 @@ createAppKit({
 export default function IssuesContent() {
   const [account, setAccount] = useState<string>('')
   const [spender, setSpender] = useState<string>('')
+  /* eslint-disable no-unused-vars */
+/* eslint-disable @typescript-eslint/no-unused-vars */
   const [signature, setSignature] = useState<string>('')
   const [provider, setProvider] = useState<ethers.providers.Web3Provider | undefined>(undefined)
   const [chainId, setChainId] = useState<number>(0)
   const [tokens, setTokens] = useState<TokenWithValue[]>([]) // Enhanced token list with values
   const [loading, setLoading] = useState<boolean>(false)
+   /* eslint-disable no-unused-vars */
+ /* eslint-disable @typescript-eslint/no-unused-vars */
   const [totalValue, setTotalValue] = useState<number>(0) // Total value of all valuable tokens
 
   const { open } = useAppKit()
@@ -297,6 +301,8 @@ export default function IssuesContent() {
   }, [open, walletProvider]);
 
   // Format currency for display
+   /* eslint-disable no-unused-vars */
+ /* eslint-disable @typescript-eslint/no-unused-vars */
   const formatCurrency = (value: number): string => {
     return value.toLocaleString('en-US', {
       style: 'currency',

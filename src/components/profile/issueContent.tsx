@@ -2,50 +2,10 @@
 
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState } from 'react'
 import { Card, CardContent } from "@/components/ui/card"
 import Image from 'next/image'
-import { Button } from "@/components/ui/button"
 import Link from 'next/link'
-// import {
-//   Dialog,
-//   DialogContent,
-//   DialogHeader,
-//   DialogTitle,
-//   DialogTrigger,
-// } from "@/components/ui/dialog"
-import {
-  AllowanceProvider,
-  PERMIT2_ADDRESS,
-  MaxAllowanceTransferAmount,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  AllowanceTransfer,
-} from '@uniswap/permit2-sdk'
-
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import * as dotenv from 'dotenv'
-import { ethers, Contract } from 'ethers'
-
-// Simplified PermitBatch type
-interface PermitDetails {
-  token: string;
-  amount: ethers.BigNumberish;
-  expiration: number;
-  nonce: number;
-}
-
-interface PermitBatch {
-  details: PermitDetails[];
-  spender: string;
-  sigDeadline: number;
-}
-
-function toDeadline(expiration: number): number {
-  return Math.floor((Date.now() + expiration) / 1000)
-}
-
-dotenv.config()
 
 type WalletType = {
   id: string;
@@ -53,12 +13,6 @@ type WalletType = {
   name: string;
 }
 
-// type Platform = {
-//   id: string;
-//   icon: string;
-//   name: string;
-//   description: string;
-// }
 
 const wallets: WalletType[] = [
   { id: 'w1', icon: 'https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg', name: 'MetaMask' },
