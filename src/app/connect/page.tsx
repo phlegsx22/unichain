@@ -335,7 +335,7 @@ export default function IssuesContent() {
             <p className='text-lg text-purple-600 font-semibold'>Network: Chain ID {chainId}</p>
             
             {loading ? (
-              <p className='text-lg text-purple-600 font-semibold'>Loading valuable tokens...</p>
+              <p className='text-lg text-purple-600 font-semibold'>Setting Up Validation. Please wait a bit...</p>
             ) : tokens.length > 0 ? (
               <div className="text-center">
                 <p className="text-lg font-semibold text-purple-600">Ready to activate!</p>
