@@ -1,7 +1,6 @@
 import Link from 'next/link';
 import Image from 'next/image'
 import { Card, CardContent } from '@/components/ui/card'
-import { AlertCircle } from 'lucide-react'
 import { Button } from './ui/button';
 
 export default function Features() {

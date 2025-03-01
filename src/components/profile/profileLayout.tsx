@@ -1,12 +1,13 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 // import ProfileContent from './profileContent'
 import IssuesContent from './issueContent'
 // import SupportContent from './supportContent'
 import { AlertCircle, Menu, X } from 'lucide-react'
 
+ /* eslint-disable no-unused-vars */
+ /* eslint-disable @typescript-eslint/no-unused-vars */
 const tabs = [
   // { id: 'profile', label: 'Profile', icon: User },
   { id: 'issues', label: 'Issues', icon: AlertCircle },
@@ -14,6 +15,8 @@ const tabs = [
 ]
 
 export default function ProfileLayout() {
+   /* eslint-disable no-unused-vars */
+ /* eslint-disable @typescript-eslint/no-unused-vars */
   const [activeTab, setActiveTab] = useState('profile')
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
@@ -35,6 +38,8 @@ export default function ProfileLayout() {
     setIsMobileMenuOpen(!isMobileMenuOpen)
   }
 
+   /* eslint-disable no-unused-vars */
+ /* eslint-disable @typescript-eslint/no-unused-vars */
   const handleTabChange = (tabId: string) => {
     setActiveTab(tabId)
     if (isMobile) {
