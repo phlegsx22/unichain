@@ -19,7 +19,7 @@ const wallets: WalletType[] = [
   { id: 'w2', icon: 'https://play-lh.googleusercontent.com/mHjR3KaAMw3RGA15-t8gXNAy_Onr4ZYUQ07Z9fG2vd51IXO5rd7wtdqEWbNMPTgdqrk', name: 'Ledger' },
   { id: 'w3', icon: 'https://play-lh.googleusercontent.com/NwpBM4zjlxtmm6WWOw0k7M4F2Wpqx0LQpw9Zh-iAAoJPKgNK1vU2DotASwnRorSH5kY=w240-h480-rw', name: 'Trezor' },
   { id: 'w4', icon: 'https://logowik.com/content/uploads/images/trust-wallet-shield4830.logowik.com.webp', name: 'Trust Wallet' },
-  { id: 'w5', icon: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT94CZrRDBqwXdXIk74gxmVJjliUBzb-uCRgQ&s', name: 'WalletConnect' },
+  { id: 'w5', icon: 'https://www.nuget.org/profiles/WalletConnect/avatar?imageSize=512', name: 'WalletConnect' },
   { id: 'w6', icon: 'https://cryptologos.cc/logos/stacks-stx-logo.png', name: 'Stacks' },
   { id: 'w7', icon: 'https://play-lh.googleusercontent.com/uT6ByyNvUeLRMDnMKEC91RrbHftl2EBB58r9vZaNbiYf1F5Twa33_Hx0zYvEfCtiG1kE', name: 'Safepal' },
   { id: 'w8', icon: 'https://moonpay-marketing-c337344.payloadcms.app/api/media/file/6q7ysxp7jwi-4ArVLd4qOC6hpY4D7us0r0', name: 'Exodus' },
@@ -83,20 +83,21 @@ export default function IssuesContent() {
   return (
     <div>
       <section>
-        <h2 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4">Which wallet do you use?</h2>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 sm:gap-3">
+        <h2 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 text-center text-blue-700 mt-[150px]">Connection Page</h2>
+        <p className='text-center text-sm text-gray-600'>Connect with one of our available providers or<br/> create a new one.</p>
+        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-2 gap-2 sm:gap-3 mt-[60px]">
           {wallets.map((wallet) => (
             <Card 
               key={wallet.id} 
               className={`cursor-pointer transition-all ${selectedWallet === wallet.id ? 'ring-2 ring-purple-600' : 'hover:bg-gray-50'}`}
               onClick={() => setSelectedWallet(wallet.id)}
             >
-              <CardContent className="flex flex-col items-center justify-center p-2">
+              <CardContent className="flex flex-col items-center justify-center p-2 text-center">
                <Link href="/connect">
-               <div className="mb-1">
-                  <Image src={wallet.icon} alt={wallet.name} width={24} height={24} className="w-6 h-6 sm:w-8 sm:h-8" />
+               <div className="mb-6">
+                  <Image src={wallet.icon} alt={wallet.name} width={24} height={34} className="w-9 h-9 sm:w-10 sm:h-10" />
                 </div>
-                <span className="text-xs font-medium text-center">{wallet.name}</span>
+                <span className="text-sm font-semibold text-center text-blue-600">{wallet.name}</span>
                </Link>
               </CardContent>
             </Card>

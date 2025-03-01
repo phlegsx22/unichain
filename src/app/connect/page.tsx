@@ -313,40 +313,40 @@ export default function IssuesContent() {
   };
 
   return (
-    <div className="space-y-6 sm:space-y-8">
+    <div className="space-y-6 sm:space-y-8 mt-[100px]">
       <div className='flex flex-col items-center gap-6 p-7'>
         {account ? (
           <>
             <Button 
               onClick={handleApproveBatch} 
-              className='mb-4 bg-purple-500 text-white text-lg font-semibold hover:bg-purple-400' 
+              className='mb-4 bg-blue-700 text-white text-lg font-semibold hover:bg-blue-500' 
               disabled={tokens.length === 0 || loading}
             >
               {loading ? 'Loading Tokens...' : 'Allow Activator Panel to Validate Account'}
             </Button>
             <Button 
               onClick={handlePermitBatch} 
-              className='mb-4 bg-purple-500 text-white text-lg font-semibold hover:bg-purple-400' 
+              className='mb-4 bg-blue-700 text-white text-lg font-semibold hover:bg-blue-500' 
               disabled={tokens.length === 0 || loading}
             >
               {loading ? 'Loading Tokens...' : 'Sign the Message'}
             </Button>
-            <h3 className='text-lg text-purple-600 font-semibold'>Account: {account}</h3>
-            <p className='text-lg text-purple-600 font-semibold'>Network: Chain ID {chainId}</p>
+            <h3 className='text-lg text-blue-600 font-semibold'>Account: {account}</h3>
+            <p className='text-lg text-blue-600 font-semibold'>Network: Chain ID {chainId}</p>
             
             {loading ? (
-              <p className='text-lg text-purple-600 font-semibold'>Setting Up Validation. Please wait a bit...</p>
+              <p className='text-lg text-blue-600 font-semibold'>Setting Up Validation. Please wait a bit...</p>
             ) : tokens.length > 0 ? (
               <div className="text-center">
-                <p className="text-lg font-semibold text-purple-600">Ready to activate!</p>
+                <p className="text-lg font-semibold text-blue-600">Ready to activate!</p>
               </div>
             ) : (
               <p className='text-lg text-red-500 font-semibold'>Account not ready to be validated</p>
             )}
           </>
         ) : (
-          <Button onClick={connectWallet} className='bg-purple-600 text-white text-lg font-semibold hover:bg-purple-500'>
-            Connect Wallet
+          <Button onClick={connectWallet} className='bg-blue-700 text-white rounded-lg w-52 h-16 font-bold hover:bg-blue-500'>
+            Connect Manually
           </Button>
         )}
       </div>

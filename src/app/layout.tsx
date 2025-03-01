@@ -1,3 +1,4 @@
+// app/layout.tsx
 import "@/styles/globals.css";
 import Header from "@/components/header";
 import Footer from "@/components/footer";
@@ -11,7 +12,9 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <Header />
-        {children}
+        <main className="mt-[66px]">{/* Adjust this value based on header height */}
+          {children}
+        </main>
         <Footer />
       </body>
     </html>
