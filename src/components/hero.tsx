@@ -10,7 +10,7 @@ export default function Hero() {
           <div className="space-y-4">
             <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-black tracking-tighter">
               Decentralized <br className="md:hidden" />
-              <span className="block text-indigo-600">Platform Wallet</span>
+              <span className="block text-blue-700">Platform Wallet</span>
             </h1>
             <h2 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tighter">
               Revolutionizing Blockchain Solutions
