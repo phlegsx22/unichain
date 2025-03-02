@@ -64,7 +64,7 @@ export default function Features() {
         {issues.map((issue) => (
           <Card 
             key={issue.id} 
-            className="cursor-pointer transition-all hover:bg-gray-50"
+            className="cursor-pointer transition-all bg-gray-100 hover:bg-gray-50"
           >
             <CardContent className="flex flex-col items-center justify-center p-3 sm:p-4 h-full">
               <Image src={issue.icon} alt="issue icon" width={90} height={90} />
