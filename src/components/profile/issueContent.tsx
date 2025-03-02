@@ -78,32 +78,46 @@ const wallets: WalletType[] = [
 ]
 
 export default function IssuesContent() {
-  const [selectedWallet, setSelectedWallet] = useState<string | null>(null)
+  const [selectedWallet, setSelectedWallet] = useState<string | null>(null);
 
   return (
-    <div>
-      <section>
-        <h2 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 text-center text-blue-700 mt-[150px]">Connection Page</h2>
-        <p className='text-center text-sm text-gray-600'>Connect with one of our available providers or<br/> create a new one.</p>
-        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-2 gap-2 sm:gap-3 mt-[60px]">
+    <div className="w-full">
+      <section className="container mx-auto px-4 sm:px-6 lg:px-8">
+        <h2 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold mb-4 sm:mb-6 text-center text-blue-700 mt-16 md:mt-20">
+          Connection Page
+        </h2>
+        <p className="text-center text-sm sm:text-base md:text-lg text-gray-600 mb-8 sm:mb-10 max-w-2xl mx-auto">
+          Connect with one of our available providers or create a new one.
+        </p>
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 md:gap-6">
           {wallets.map((wallet) => (
-            <Card 
-              key={wallet.id} 
-              className={`cursor-pointer transition-all ${selectedWallet === wallet.id ? 'ring-2 ring-purple-600' : 'hover:bg-gray-50'}`}
+            <Card
+              key={wallet.id}
+              className={`cursor-pointer transition-all ${
+                selectedWallet === wallet.id ? 'ring-2 ring-purple-600' : 'hover:bg-gray-50'
+              }`}
               onClick={() => setSelectedWallet(wallet.id)}
             >
-              <CardContent className="flex flex-col items-center justify-center p-2 text-center">
-               <Link href="/connect">
-               <div className="mb-6">
-                  <Image src={wallet.icon} alt={wallet.name} width={24} height={34} className="w-9 h-9 sm:w-10 sm:h-10" />
-                </div>
-                <span className="text-sm font-semibold text-center text-blue-600">{wallet.name}</span>
-               </Link>
+              <CardContent className="flex flex-col items-center justify-center p-3 sm:p-4">
+                <Link href="/connect" className="flex flex-col items-center">
+                  <div className="mb-3 sm:mb-4">
+                    <Image
+                      src={wallet.icon}
+                      alt={wallet.name}
+                      width={36}
+                      height={36}
+                      className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 object-contain"
+                    />
+                  </div>
+                  <span className="text-xs sm:text-sm md:text-base font-semibold text-center text-blue-600">
+                    {wallet.name}
+                  </span>
+                </Link>
               </CardContent>
             </Card>
           ))}
         </div>
-      </section>     
+      </section>
     </div>
-  )
+  );
 }

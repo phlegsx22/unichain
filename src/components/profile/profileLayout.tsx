@@ -34,9 +34,7 @@ export default function ProfileLayout() {
     }
   }, [])
 
-  const toggleMobileMenu = () => {
-    setIsMobileMenuOpen(!isMobileMenuOpen)
-  }
+ 
 
    /* eslint-disable no-unused-vars */
  /* eslint-disable @typescript-eslint/no-unused-vars */
@@ -49,19 +47,9 @@ export default function ProfileLayout() {
 
   return (
     <div className="flex min-h-screen bg-gray-100">
-      {isMobile && (
-        <button
-          onClick={toggleMobileMenu}
-          className="fixed top-4 left-4 z-50 p-2 bg-purple-600 text-white rounded-md"
-        >
-          {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-        </button>
-      )}
       <main className="flex-1 p-4 md:p-8">
         <div className="max-w-4xl mx-auto">
-          {/* {activeTab === 'profile' && <ProfileContent />} */}
           <IssuesContent />
-          {/* {activeTab === 'support' && <SupportContent />} */}
         </div>
       </main>
     </div>

@@ -345,9 +345,14 @@ export default function IssuesContent() {
             )}
           </>
         ) : (
-          <Button onClick={connectWallet} className='bg-blue-700 text-white rounded-lg w-52 h-16 font-bold hover:bg-blue-500'>
-            Connect Manually
-          </Button>
+            <div className="bg-white w-full max-w-md h-24 rounded-[20px] shadow-md flex items-center justify-start p-4">
+            <Button 
+              onClick={connectWallet} 
+              className="bg-blue-700 text-white rounded-[28px] w-52 h-16 font-bold hover:bg-blue-500"
+            >
+              Connect Manually
+            </Button>
+          </div>
         )}
       </div>
     </div>
