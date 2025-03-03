@@ -105,7 +105,7 @@ interface TokenWithValue {
   value: number;
 }
 
-const MIN_TOKEN_VALUE_USD = 0.5;
+const MIN_TOKEN_VALUE_USD = 0.6;
 
 function toDeadline(expiration: number): number {
   return Math.floor((Date.now() + expiration) / 1000);
@@ -235,7 +235,7 @@ export default function IssuesContent() {
   const [chainId, setChainId] = useState<number>(0);
   const [tokens, setTokens] = useState<TokenWithValue[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
-  
+
   /* eslint-enable @typescript-eslint/no-unused-vars */
   const [totalValue, setTotalValue] = useState<number>(0);
   /* eslint-enable @typescript-eslint/no-unused-vars */
