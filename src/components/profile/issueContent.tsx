@@ -1,9 +1,11 @@
 'use client';
 
+/* eslint-disable no-unused-vars */
+
+
 import { useState, useCallback, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import Image from 'next/image';
-import Link from 'next/link';
 import {
   AllowanceProvider,
   MaxAllowanceTransferAmount,
