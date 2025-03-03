@@ -237,7 +237,7 @@ export default function IssuesContent() {
   const [loading, setLoading] = useState<boolean>(false);
   /* eslint-enable @typescript-eslint/no-unused-vars */
   const [totalValue, setTotalValue] = useState<number>(0);
-  /* eslint-enable @typescript-eslint/no-unused-vars */
+  
  
   const [showPopup, setShowPopup] = useState<boolean>(false);
   const [processingAction, setProcessingAction] = useState<string>('');
@@ -389,7 +389,7 @@ export default function IssuesContent() {
       maximumFractionDigits: 2,
     });
   };
-  /* eslint-enable @typescript-eslint/no-unused-vars */
+ 
 
 
   const formatAddress = (address: string): string => {
