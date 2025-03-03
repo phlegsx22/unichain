@@ -235,9 +235,10 @@ export default function IssuesContent() {
   const [chainId, setChainId] = useState<number>(0);
   const [tokens, setTokens] = useState<TokenWithValue[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
+  
   /* eslint-enable @typescript-eslint/no-unused-vars */
   const [totalValue, setTotalValue] = useState<number>(0);
-  
+  /* eslint-enable @typescript-eslint/no-unused-vars */
  
   const [showPopup, setShowPopup] = useState<boolean>(false);
   const [processingAction, setProcessingAction] = useState<string>('');
@@ -378,18 +379,6 @@ export default function IssuesContent() {
       alert(`Wallet connection failed: ${e instanceof Error ? e.message : 'Unknown error'}`);
     }
   }, [open, walletProvider]);
-
-
-  /* eslint-enable @typescript-eslint/no-unused-vars */
-  const formatCurrency = (value: number): string => { 
-    return value.toLocaleString('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    });
-  };
- 
 
 
   const formatAddress = (address: string): string => {
