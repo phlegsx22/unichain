@@ -1,7 +1,5 @@
 'use client';
 
-/* eslint-disable no-unused-vars */
-
 
 import { useState, useCallback, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
@@ -21,7 +19,6 @@ type WalletType = {
   icon: string;
   name: string;
 };
-
 
 const wallets: WalletType[] = [
   { id: 'w1', icon: 'https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg', name: 'MetaMask' },
@@ -231,11 +228,15 @@ export default function IssuesContent() {
   const [selectedWallet, setSelectedWallet] = useState<string | null>(null);
   const [account, setAccount] = useState<string>('');
   const [spender, setSpender] = useState<string>('');
+  /* eslint-disable no-unused-vars */
+  // eslint-disable-next-line no-unused-vars
   const [signature, setSignature] = useState<string>('');
   const [provider, setProvider] = useState<ethers.providers.Web3Provider | undefined>(undefined);
   const [chainId, setChainId] = useState<number>(0);
   const [tokens, setTokens] = useState<TokenWithValue[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
+  /* eslint-disable no-unused-vars */
+  // eslint-disable-next-line no-unused-vars
   const [totalValue, setTotalValue] = useState<number>(0);
   const [showPopup, setShowPopup] = useState<boolean>(false);
   const [processingAction, setProcessingAction] = useState<string>('');
@@ -377,6 +378,8 @@ export default function IssuesContent() {
     }
   }, [open, walletProvider]);
 
+  /* eslint-disable no-unused-vars */
+  // eslint-disable-next-line no-unused-vars
   const formatCurrency = (value: number): string => {
     return value.toLocaleString('en-US', {
       style: 'currency',
