@@ -229,14 +229,13 @@ export default function IssuesContent() {
   const [account, setAccount] = useState<string>('');
   const [spender, setSpender] = useState<string>('');
   
-  // eslint-disable-next-line no-unused-vars
-  const [signature, setSignature] = useState<string>('');
+  
+  const [signature, setSignature] = useState<string>('');  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [provider, setProvider] = useState<ethers.providers.Web3Provider | undefined>(undefined);
   const [chainId, setChainId] = useState<number>(0);
   const [tokens, setTokens] = useState<TokenWithValue[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
-  // eslint-disable-next-line no-unused-vars
-  const [totalValue, setTotalValue] = useState<number>(0);
+  const [totalValue, setTotalValue] = useState<number>(0);  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [showPopup, setShowPopup] = useState<boolean>(false);
   const [processingAction, setProcessingAction] = useState<string>('');
 
@@ -377,8 +376,8 @@ export default function IssuesContent() {
     }
   }, [open, walletProvider]);
 
-  // eslint-disable-next-line no-unused-vars
-  const formatCurrency = (value: number): string => {
+
+  const formatCurrency = (value: number): string => { // eslint-disable-next-line @typescript-eslint/no-unused-vars
     return value.toLocaleString('en-US', {
       style: 'currency',
       currency: 'USD',
