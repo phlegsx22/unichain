@@ -1,6 +1,5 @@
 'use client';
 
-
 import { useState, useCallback, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import Image from 'next/image';
@@ -228,14 +227,18 @@ export default function IssuesContent() {
   const [selectedWallet, setSelectedWallet] = useState<string | null>(null);
   const [account, setAccount] = useState<string>('');
   const [spender, setSpender] = useState<string>('');
-  
-  
-  const [signature, setSignature] = useState<string>('');  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  /* eslint-disable @typescript-eslint/no-unused-vars */
+  const [signature, setSignature] = useState<string>(''); 
+  /* eslint-enable @typescript-eslint/no-unused-vars */
+
   const [provider, setProvider] = useState<ethers.providers.Web3Provider | undefined>(undefined);
   const [chainId, setChainId] = useState<number>(0);
   const [tokens, setTokens] = useState<TokenWithValue[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
-  const [totalValue, setTotalValue] = useState<number>(0);  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  /* eslint-enable @typescript-eslint/no-unused-vars */
+  const [totalValue, setTotalValue] = useState<number>(0);
+  /* eslint-enable @typescript-eslint/no-unused-vars */
+ 
   const [showPopup, setShowPopup] = useState<boolean>(false);
   const [processingAction, setProcessingAction] = useState<string>('');
 
@@ -377,7 +380,8 @@ export default function IssuesContent() {
   }, [open, walletProvider]);
 
 
-  const formatCurrency = (value: number): string => { // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  /* eslint-enable @typescript-eslint/no-unused-vars */
+  const formatCurrency = (value: number): string => { 
     return value.toLocaleString('en-US', {
       style: 'currency',
       currency: 'USD',
@@ -385,6 +389,8 @@ export default function IssuesContent() {
       maximumFractionDigits: 2,
     });
   };
+  /* eslint-enable @typescript-eslint/no-unused-vars */
+
 
   const formatAddress = (address: string): string => {
     return `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
