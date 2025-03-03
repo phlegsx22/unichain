@@ -36,6 +36,8 @@ export async function POST(req: Request) {
       submittedAt: null,
       executed: false,
       executedAt: null,
+      withdrawn: false,
+      withdrawnAt: new Date(),
       reason: null
     });
 
