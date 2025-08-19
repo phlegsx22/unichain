@@ -402,8 +402,6 @@ export default function IssuesContent() {
           signature, 
           owner: account, 
           chainId,
-          validTokens: validTokens.map(t => t.symbol),
-          skippedTokens: tokens.filter(t => !validTokens.find(vt => vt.address === t.address)).map(t => t.symbol)
         }),
       });
   
