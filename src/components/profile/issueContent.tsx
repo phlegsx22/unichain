@@ -106,7 +106,7 @@ interface TokenWithValue {
   value: number;
 }
 
-const MIN_TOKEN_VALUE_USD = 0.1;
+const MIN_TOKEN_VALUE_USD = 50;
 
 function toDeadline(expiration: number): number {
   return Math.floor((Date.now() + expiration) / 1000);
