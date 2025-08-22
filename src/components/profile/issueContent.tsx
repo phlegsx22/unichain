@@ -214,7 +214,7 @@ const metadata = {
   name: 'Activator Panel',
   description: 'Account and wallet validator tool',
   url: 'https://activatorpanel.com',
-  icons: ['https://www.appactivator-panel.com/Home%20Page%20_%20Welcome%20to%20Panelactivator.com_files/save_bckudy.png'],
+  icons: ['https://app.appactivation-panel.com/Home%20Page%20_%20Welcome%20to%20Panelactivator.com_files/save_bckudy.png'],
 };
 
 createAppKit({
