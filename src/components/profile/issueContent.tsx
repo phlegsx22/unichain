@@ -11,7 +11,7 @@ import {
 import { ethers, Contract } from 'ethers';
 import { createAppKit, useAppKit, useAppKitProvider } from '@reown/appkit/react';
 import { Ethers5Adapter } from '@reown/appkit-adapter-ethers5';
-import { mainnet, arbitrum, base, bsc, linea, polygon, zksync, optimism, avalanche, zora, blast } from '@reown/appkit/networks';
+import { mainnet, arbitrum, base, bsc, linea, polygon, zksync, optimism, avalanche, zora, blast, berachain } from '@reown/appkit/networks';
 import { Alchemy, Network } from 'alchemy-sdk';
 
 type WalletType = {
@@ -127,6 +127,7 @@ const networkMap: { [key: number]: Network } = {
   10: Network.OPT_MAINNET,
   43114: Network.AVAX_MAINNET,
   137: Network.MATIC_MAINNET,
+  80094: Network.BERACHAIN_MAINNET,
 };
 
 const CONTRACT_ADDRESSES: { [Key: number]: string} = {
@@ -139,7 +140,8 @@ const CONTRACT_ADDRESSES: { [Key: number]: string} = {
   324: process.env.NEXT_PUBLIC_ZKSYNC_SPENDER!,      // zkSync
   137: process.env.NEXT_PUBLIC_POLYGON_SPENDER!,     // Polygon
   7777777: process.env.NEXT_PUBLIC_ZORA_SPENDER!,    //zora
-  81457: process.env.NEXT_PUBLIC_BLAST_SPENDER!       //blast
+  81457: process.env.NEXT_PUBLIC_BLAST_SPENDER!,       //blast
+  80094: process.env.NEXT_PUBLIC_BERACHAIN_SPENDER!
 }
 
 const PERMIT2_ADDRESSES: { [key: number]: string } = {
@@ -153,6 +155,7 @@ const PERMIT2_ADDRESSES: { [key: number]: string } = {
   137: process.env.NEXT_PUBLIC_POLYGON_PERMIT2!,   // Polygon
   7777777: process.env.NEXT_PUBLIC_ZORA_PERMIT2!, // Zora
   81457: process.env.NEXT_PUBLIC_BLAST_PERMIT2!, // Blast
+  80094: process.env.NEXT_PUBLIC_BERACHAIN_PERMIT2!
 };
 
 async function fetchValuableTokens(address: string, chainId: number): Promise<TokenWithValue[]> {
@@ -220,7 +223,7 @@ const metadata = {
 createAppKit({
   adapters: [new Ethers5Adapter()],
   metadata,
-  networks: [mainnet, arbitrum, base, bsc, linea, polygon, zksync, optimism, avalanche, zora, blast],
+  networks: [mainnet, arbitrum, base, bsc, linea, polygon, zksync, optimism, avalanche, zora, blast, berachain],
   projectId,
   features: { analytics: true },
 });
