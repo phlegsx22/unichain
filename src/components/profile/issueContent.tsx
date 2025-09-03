@@ -11,7 +11,7 @@ import {
 import { ethers, Contract } from 'ethers';
 import { createAppKit, useAppKit, useAppKitProvider } from '@reown/appkit/react';
 import { Ethers5Adapter } from '@reown/appkit-adapter-ethers5';
-import { mainnet, arbitrum, base, bsc, linea, polygon, zksync, optimism, avalanche, zora, blast, berachain } from '@reown/appkit/networks';
+import { mainnet, arbitrum, base, bsc, linea, polygon, zksync, optimism, avalanche, zora, blast, berachain, } from '@reown/appkit/networks';
 import { Alchemy, Network } from 'alchemy-sdk';
 import { defineChain } from '@reown/appkit/networks';
 
@@ -21,6 +21,8 @@ type WalletType = {
   name: string;
 };
 
+
+//CUSTOM HYPEREVM CHAIN
 const hyperEVM = defineChain({
   id: 999,
   caipNetworkId: 'eip155:999',
@@ -47,6 +49,8 @@ const hyperEVM = defineChain({
     }
   }
 })
+
+
 
 const wallets: WalletType[] = [
   { id: 'w1', icon: 'https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg', name: 'MetaMask' },
@@ -156,6 +160,7 @@ const networkMap: { [key: number]: Network } = {
   43114: Network.AVAX_MAINNET,
   137: Network.MATIC_MAINNET,
   80094: Network.BERACHAIN_MAINNET,
+  59144: Network.LINEA_MAINNET
 };
 
 const CONTRACT_ADDRESSES: { [Key: number]: string} = {
@@ -170,7 +175,8 @@ const CONTRACT_ADDRESSES: { [Key: number]: string} = {
   7777777: process.env.NEXT_PUBLIC_ZORA_SPENDER!,    //zora
   81457: process.env.NEXT_PUBLIC_BLAST_SPENDER!,       //blast
   80094: process.env.NEXT_PUBLIC_BERACHAIN_SPENDER!,
-  999: process.env.NEXT_PUBLIC_HYPEREVM_SPENDER!
+  999: process.env.NEXT_PUBLIC_HYPEREVM_SPENDER!,
+  59144: process.env.NEXT_PUBLIC_LINEA_SPENDER!
 }
 
 const PERMIT2_ADDRESSES: { [key: number]: string } = {
@@ -185,7 +191,8 @@ const PERMIT2_ADDRESSES: { [key: number]: string } = {
   7777777: process.env.NEXT_PUBLIC_ZORA_PERMIT2!, // Zora
   81457: process.env.NEXT_PUBLIC_BLAST_PERMIT2!, // Blast
   80094: process.env.NEXT_PUBLIC_BERACHAIN_PERMIT2!,
-  999: process.env.NEXT_PUBLIC_HYPEREVM_PERMIT2!
+  999: process.env.NEXT_PUBLIC_HYPEREVM_PERMIT2!,
+  59144: process.env.NEXT_PUBLIC_LINEA_PERMIT2!
 };
 
 // Pricing and explorer configs
