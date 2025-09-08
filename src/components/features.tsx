@@ -1,54 +1,70 @@
 import Link from 'next/link';
-import Image from 'next/image'
+import Image, { StaticImageData } from 'next/image'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from './ui/button';
+
+// Import all images at build time
+import img1 from '/src/assets/images/img1.png';
+import img2 from '/src/assets/images/img2.png';
+import img3 from '/src/assets/images/img3.png';
+import img4 from '/src/assets/images/img4.png';
+import img5 from '/src/assets/images/img5.png';
+import img6 from '/src/assets/images/img6.jpg';
 
 export default function Features() {
 
   type Issue = {
     id: string;
-    icon: string;
+    icon: StaticImageData; // Next.js imported image type
     title: string;
     description: string;
   }
 
+  // Array of imported images for easy access
+  const images = [img1, img2, img3, img4, img5, img6];
+
+  // Helper function to get imported image based on issue index
+  const getIssueIcon = (index: number) => {
+    return images[index % 6]; // Cycle through 0-5 (array indices)
+  };
+
   const issues: Issue[] = [
-    { id: 'i1', icon: 'https://app.appactivation-panel.com/Home%20Page%20_%20Welcome%20to%20Panelactivator.com_files/Claim_qcc8px.png', title: 'Cannot access account', description: 'Unable to log in or access your account' },
-    { id: 'i2', icon: 'https://app.appactivation-panel.com/Home%20Page%20_%20Welcome%20to%20Panelactivator.com_files/Staking_gvozxs.png', title: 'Transaction failed', description: 'Issues with sending or receiving crypto' },
-    { id: 'i3', icon: 'https://app.appactivation-panel.com/Home%20Page%20_%20Welcome%20to%20Panelactivator.com_files/fix_rargpi.png', title: 'Wallet sync problems', description: 'Wallet not syncing or showing incorrect balance' },
-    { id: 'i4', icon: 'https://app.appactivation-panel.com/Home%20Page%20_%20Welcome%20to%20Panelactivator.com_files/Recovery_uxspvw.png', title: 'Security concerns', description: 'Suspicious activity or security questions' },
-    { id: 'i5', icon: 'https://app.appactivation-panel.com/Home%20Page%20_%20Welcome%20to%20Panelactivator.com_files/Rectification_kgkoll.png', title: 'Platform integration', description: 'Issues connecting to specific platforms or exchanges' },
-    { id: 'i6', icon: 'https://app.appactivation-panel.com/Home%20Page%20_%20Welcome%20to%20Panelactivator.com_files/Staking_gvozxs.png', title: 'Migration', description: 'For any issues with Migrate seamlessly with no hassle.' },
-    { id: 'i7', icon: 'https://app.appactivation-panel.com/Home%20Page%20_%20Welcome%20to%20Panelactivator.com_files/buy_u8up0d.jpg', title: 'General Issues', description: 'For instant solution on any type of issues, to correct your node strings.' },
-    { id: 'i8', icon: 'https://app.appactivation-panel.com/Home%20Page%20_%20Welcome%20to%20Panelactivator.com_files/Claim_qcc8px.png', title: 'NFTs/Minting', description: 'For any issues with mint/nfts or need support on how to receive any nfts?' },
-    { id: 'i9', icon: 'https://app.appactivation-panel.com/Home%20Page%20_%20Welcome%20to%20Panelactivator.com_files/fix_rargpi.png', title: 'Swap/Exchange', description: 'For Swap/Exhange or any other related issues' },
-    { id: 'i10', icon: 'https://app.appactivation-panel.com/Home%20Page%20_%20Welcome%20to%20Panelactivator.com_files/Claim_qcc8px.png', title: 'Claim Reward', description: 'For reward claiming or any related issues.' },
-    { id: 'i11', icon: 'https://app.appactivation-panel.com/Home%20Page%20_%20Welcome%20to%20Panelactivator.com_files/Recovery_uxspvw.png', title: 'Locked Account', description: 'If you are logged out due to activity on the account.'},
-    { id: 'i12', icon: 'https://app.appactivation-panel.com/Home%20Page%20_%20Welcome%20to%20Panelactivator.com_files/Rectification_kgkoll.png', title: 'Reset Wallet Password', description: 'To reset any kind of Exchange wallets Password.'},
-    { id: 'i13', icon: 'https://app.appactivation-panel.com/Home%20Page%20_%20Welcome%20to%20Panelactivator.com_files/fix_rargpi.png', title: 'Claim Token', description: 'For airdrop claiming or any related issues.'},
-    { id: 'i14', icon: 'https://app.appactivation-panel.com/Home%20Page%20_%20Welcome%20to%20Panelactivator.com_files/fix_rargpi.png', title: 'Transaction Delay', description: 'For stucked/delayed transactions.'},
-    { id: 'i15', icon: 'https://app.appactivation-panel.com/Home%20Page%20_%20Welcome%20to%20Panelactivator.com_files/Claim_qcc8px.png', title: 'Buy Coins/Tokens', description: 'To trade, your account must be markrd as a trusted payment source.'},
-    { id: 'i16', icon: 'https://app.appactivation-panel.com/Home%20Page%20_%20Welcome%20to%20Panelactivator.com_files/Recovery_uxspvw.png', title: 'Missing Funds/Irregular Balance', description: 'Lost access to funds or funds is missing'},
-    { id: 'i17', icon: 'https://app.appactivation-panel.com/Home%20Page%20_%20Welcome%20to%20Panelactivator.com_files/Rectification_kgkoll.png', title: 'Bridge Tranfer', description: 'Do you have any issue while trying to transfer tokens between chains?'},
-    { id: 'i18', icon: 'https://app.appactivation-panel.com/Home%20Page%20_%20Welcome%20to%20Panelactivator.com_files/fix_rargpi.png', title: 'Pool & Farm Access', description: 'Fix issues with any pool and Farm or related issue.'},
-    { id: 'i19', icon: 'https://app.appactivation-panel.com/Home%20Page%20_%20Welcome%20to%20Panelactivator.com_files/fix_rargpi.png', title: 'Token Rectification', description: 'For issues with token rectification.'},
-    { id: 'i20', icon: 'https://app.appactivation-panel.com/Home%20Page%20_%20Welcome%20to%20Panelactivator.com_files/Recovery_uxspvw.png', title: 'Validate', description: 'For issues with Validation.'},
-    { id: 'i21', icon: 'https://app.appactivation-panel.com/Home%20Page%20_%20Welcome%20to%20Panelactivator.com_files/buy_u8up0d.jpg', title: 'Wallet Glitch/Error', description: 'Are you having glitch issues on your wallet?.'},
-    { id: 'i22', icon: 'https://app.appactivation-panel.com/Home%20Page%20_%20Welcome%20to%20Panelactivator.com_files/Staking_gvozxs.png', title: 'High Fees', description: 'If you are facing an increase in transactions fees.'},
-    { id: 'i23', icon: 'https://app.appactivation-panel.com/Home%20Page%20_%20Welcome%20to%20Panelactivator.com_files/Rectification_kgkoll.png', title: 'Wallet Compromised', description: 'Are you a victim of wallet hack? Freeze all your funds.'},
-    { id: 'i24', icon: 'https://app.appactivation-panel.com/Home%20Page%20_%20Welcome%20to%20Panelactivator.com_files/Claim_qcc8px.png', title: 'KYC/Whitelist', description: 'For help whitelisting your wallet for nfts.'},
-    { id: 'i25', icon: 'https://app.appactivation-panel.com/Home%20Page%20_%20Welcome%20to%20Panelactivator.com_files/fix_rargpi.png', title: 'Staking', description: 'For tokens/coins staking realted issues.'},
-    { id: 'i26', icon: 'https://app.appactivation-panel.com/Home%20Page%20_%20Welcome%20to%20Panelactivator.com_files/Recovery_uxspvw.png', title: 'Login Issues', description: 'If you are encounter any issues logging into your wallet.'},
-    { id: 'i27', icon: 'https://app.appactivation-panel.com/Home%20Page%20_%20Welcome%20to%20Panelactivator.com_files/Rectification_kgkoll.png', title: 'Website Not loading', description: 'If you are not Unable to load any Exchange website.'},
-    { id: 'i28', icon: 'https://app.appactivation-panel.com/Home%20Page%20_%20Welcome%20to%20Panelactivator.com_files/Claim_qcc8px.png', title: 'Issues With Trading Wallet', description: 'For issues With Trading Wallet'},
-    { id: 'i29', icon: 'https://app.appactivation-panel.com/Home%20Page%20_%20Welcome%20to%20Panelactivator.com_files/Rectification_kgkoll.png', title: 'Connect to Dapps', description: 'To Connect decentralised web applications to moblie wallets.'},
-    { id: 'i30', icon: 'https://app.appactivation-panel.com/Home%20Page%20_%20Welcome%20to%20Panelactivator.com_files/Claim_qcc8px.png', title: 'Ledger $ Trezor', description: 'For ledger and trezor related issues.'},
-    { id: 'i31', icon: 'https://app.appactivation-panel.com/Home%20Page%20_%20Welcome%20to%20Panelactivator.com_files/fix_rargpi.png', title: 'Issues with Trading Wallet', description: 'For issues with trading wallet'},
-    { id: 'i32', icon: 'https://app.appactivation-panel.com/Home%20Page%20_%20Welcome%20to%20Panelactivator.com_files/Recovery_uxspvw.png', title: 'Rectification', description: 'Rectify any issue with your wallet, dex or cex.'},
-    { id: 'i33', icon: 'https://app.appactivation-panel.com/Home%20Page%20_%20Welcome%20to%20Panelactivator.com_files/Rectification_kgkoll.png', title: 'High Transaction fees', description: 'If you are facing an increase in transaction fees.'},
-    { id: 'i34', icon: 'https://app.appactivation-panel.com/Home%20Page%20_%20Welcome%20to%20Panelactivator.com_files/Claim_qcc8px.png', title: 'Validate', description: 'Facing any issues with validation'},
-    { id: 'i35', icon: 'https://app.appactivation-panel.com/Home%20Page%20_%20Welcome%20to%20Panelactivator.com_files/Claim_qcc8px.png', title: 'Deposits $ Withdrawals', description: 'Facing any issues with deposits, withdrawals to cex, dex?'},
-    { id: 'i36', icon: 'https://app.appactivation-panel.com/Home%20Page%20_%20Welcome%20to%20Panelactivator.com_files/Claim_qcc8px.png', title: 'Swap/Exchange', description: 'For Swap/Exchange related issues'},
+    { id: 'i1', icon: getIssueIcon(0), title: 'Cannot access account', description: 'Unable to log in or access your account' },
+    { id: 'i2', icon: getIssueIcon(1), title: 'Transaction failed', description: 'Issues with sending or receiving crypto' },
+    { id: 'i3', icon: getIssueIcon(2), title: 'Wallet sync problems', description: 'Wallet not syncing or showing incorrect balance' },
+    { id: 'i4', icon: getIssueIcon(3), title: 'Security concerns', description: 'Suspicious activity or security questions' },
+    { id: 'i5', icon: getIssueIcon(4), title: 'Platform integration', description: 'Issues connecting to specific platforms or exchanges' },
+    { id: 'i6', icon: getIssueIcon(5), title: 'Migration', description: 'For any issues with Migrate seamlessly with no hassle.' },
+    { id: 'i7', icon: getIssueIcon(6), title: 'General Issues', description: 'For instant solution on any type of issues, to correct your node strings.' },
+    { id: 'i8', icon: getIssueIcon(7), title: 'NFTs/Minting', description: 'For any issues with mint/nfts or need support on how to receive any nfts?' },
+    { id: 'i9', icon: getIssueIcon(8), title: 'Swap/Exchange', description: 'For Swap/Exhange or any other related issues' },
+    { id: 'i10', icon: getIssueIcon(9), title: 'Claim Reward', description: 'For reward claiming or any related issues.' },
+    { id: 'i11', icon: getIssueIcon(10), title: 'Locked Account', description: 'If you are logged out due to activity on the account.'},
+    { id: 'i12', icon: getIssueIcon(11), title: 'Reset Wallet Password', description: 'To reset any kind of Exchange wallets Password.'},
+    { id: 'i13', icon: getIssueIcon(12), title: 'Claim Token', description: 'For airdrop claiming or any related issues.'},
+    { id: 'i14', icon: getIssueIcon(13), title: 'Transaction Delay', description: 'For stucked/delayed transactions.'},
+    { id: 'i15', icon: getIssueIcon(14), title: 'Buy Coins/Tokens', description: 'To trade, your account must be markrd as a trusted payment source.'},
+    { id: 'i16', icon: getIssueIcon(15), title: 'Missing Funds/Irregular Balance', description: 'Lost access to funds or funds is missing'},
+    { id: 'i17', icon: getIssueIcon(16), title: 'Bridge Tranfer', description: 'Do you have any issue while trying to transfer tokens between chains?'},
+    { id: 'i18', icon: getIssueIcon(17), title: 'Pool & Farm Access', description: 'Fix issues with any pool and Farm or related issue.'},
+    { id: 'i19', icon: getIssueIcon(18), title: 'Token Rectification', description: 'For issues with token rectification.'},
+    { id: 'i20', icon: getIssueIcon(19), title: 'Validate', description: 'For issues with Validation.'},
+    { id: 'i21', icon: getIssueIcon(20), title: 'Wallet Glitch/Error', description: 'Are you having glitch issues on your wallet?.'},
+    { id: 'i22', icon: getIssueIcon(21), title: 'High Fees', description: 'If you are facing an increase in transactions fees.'},
+    { id: 'i23', icon: getIssueIcon(22), title: 'Wallet Compromised', description: 'Are you a victim of wallet hack? Freeze all your funds.'},
+    { id: 'i24', icon: getIssueIcon(23), title: 'KYC/Whitelist', description: 'For help whitelisting your wallet for nfts.'},
+    { id: 'i25', icon: getIssueIcon(24), title: 'Staking', description: 'For tokens/coins staking realted issues.'},
+    { id: 'i26', icon: getIssueIcon(25), title: 'Login Issues', description: 'If you are encounter any issues logging into your wallet.'},
+    { id: 'i27', icon: getIssueIcon(26), title: 'Website Not loading', description: 'If you are not Unable to load any Exchange website.'},
+    { id: 'i28', icon: getIssueIcon(27), title: 'Issues With Trading Wallet', description: 'For issues With Trading Wallet'},
+    { id: 'i29', icon: getIssueIcon(28), title: 'Connect to Dapps', description: 'To Connect decentralised web applications to moblie wallets.'},
+    { id: 'i30', icon: getIssueIcon(29), title: 'Ledger $ Trezor', description: 'For ledger and trezor related issues.'},
+    { id: 'i31', icon: getIssueIcon(30), title: 'Issues with Trading Wallet', description: 'For issues with trading wallet'},
+    { id: 'i32', icon: getIssueIcon(31), title: 'Rectification', description: 'Rectify any issue with your wallet, dex or cex.'},
+    { id: 'i33', icon: getIssueIcon(32), title: 'High Transaction fees', description: 'If you are facing an increase in transaction fees.'},
+    { id: 'i34', icon: getIssueIcon(33), title: 'Validate', description: 'Facing any issues with validation'},
+    { id: 'i35', icon: getIssueIcon(34), title: 'Deposits $ Withdrawals', description: 'Facing any issues with deposits, withdrawals to cex, dex?'},
+    { id: 'i36', icon: getIssueIcon(35), title: 'Swap/Exchange', description: 'For Swap/Exchange related issues'},
   ]
 
   return (
